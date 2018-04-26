@@ -35,28 +35,12 @@ type Token struct {
 
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
-func getJSON(req *http.Request, target interface{}) error {
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return (err)
-	}
-	defer resp.Body.Close()
-	debugREST(httputil.DumpResponse(resp, true))
-
-	return json.NewDecoder(resp.Body).Decode(target)
-}
-
-// Login authenticate against OneLogin.
-func Login(conf Config, log *logrus.Logger) {
-	generateToken(conf)
-}
 
 // Call to https://developers.onelogin.com/api-docs/1/oauth20-tokens/generate-tokens
 // Generate an access token and refresh token to access onelogin's resource APIs.
-func generateToken(conf Config) {
+func GenerateToken(conf Config, log *logrus.Logger) {
 
-	auth := ("client_id:" + conf.ClientID + ",client_secret:" + conf.ClientSecret)
+	auth := "client_id:" + conf.ClientID + ",client_secret:" + conf.ClientSecret
 	url := conf.BaseURL + generateTokenAPI
 
 	var jsonStr = []byte(`{"grant_type":"client_credentials"}`)
@@ -66,16 +50,27 @@ func generateToken(conf Config) {
 	}
 	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
+	logRequest(log, req)
 
-	debugREST(httputil.DumpRequestOut(req, true))
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	//debugREST(httputil.DumpResponse(resp, true))
+
+	//return json.NewDecoder(resp.Body).Decode(target)
 
 	test := Token{}
-	getJSON(req, &test)
+	json.NewDecoder(resp.Body).Decode(&test)
 
 	fmt.Println(test.Data)
 }
 
-func debugREST(data []byte, err error) {
-	// handleError(err, log)
-	// log.Debugf("%s", data)
+func logRequest(log *logrus.Logger, req *http.Request) {
+	dump, _ := httputil.DumpRequestOut(req, true)
+	log.Debug(dump)
 }
+
+
+

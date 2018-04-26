@@ -5,6 +5,7 @@ import (
 	"os/user"
 
 	"github.com/BurntSushi/toml"
+	"github.com/Sirupsen/logrus"
 )
 
 // Config represents the masl config file
@@ -19,18 +20,28 @@ type Config struct {
 }
 
 // GetConfig reads the masl.toml configuration file for initialization.
-func GetConfig() Config {
+func GetConfig(logger *logrus.Logger) Config {
 
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Read masl.toml confif file for initialization
+	// Read masl.toml config file for initialization
 	var conf Config
 	if _, err := toml.DecodeFile(usr.HomeDir+"/masl.toml", &conf); err != nil {
 		log.Fatal(err.Error())
 	}
+
+	logger.WithFields(logrus.Fields{
+		"baseURL":      conf.BaseURL,
+		"clientID":     conf.ClientID,
+		"clientSecret": conf.ClientSecret,
+		"appID":        conf.AppID,
+		"subdomain":    conf.Subdomain,
+		"username":     conf.Username,
+		"debug":        conf.Debug,
+	}).Info("Config settings")
 
 	return conf
 }
