@@ -15,3 +15,5 @@
 
 # TOML config files
 *.toml
+
+.idea/
