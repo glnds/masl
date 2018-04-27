@@ -6,6 +6,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/glnds/masl/internal/masl"
+	"fmt"
+	"github.com/howeyc/gopass"
 )
 
 var logger = logrus.New()
@@ -17,7 +19,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	// Create the logger file if doesn't exist. And append to it if it already exists.
+	// Create the logger file if doesn't exist. Append to it if it already exists.
 	var filename = "/masl.log"
 	file, err := os.OpenFile(usr.HomeDir+filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	Formatter := new(logrus.TextFormatter)
@@ -31,10 +33,21 @@ func main() {
 	}
 
 	logger.Info("--------------- w00t w00t masl for you!?  ---------------")
+	logger.SetLevel(logrus.InfoLevel)
 
 	// Read config file
 	conf := masl.GetConfig(logger)
+	if conf.Debug {
+		logger.SetLevel(logrus.DebugLevel)
+	}
 
-	// Generate a new OneLogin API Token
-	masl.GenerateToken(conf, logger)
+	// As for the user's password
+	fmt.Print("OneLogin Password: ")
+	password, err := gopass.GetPasswdMasked()
+	if err != nil {
+		logger.Fatal(err)
+	}
+	// Generate a new OneLogin API APITokenResponse
+	apiToken := masl.GenerateToken(conf, logger)
+	masl.SAMLAssertion(conf, logger, string(password), apiToken)
 }
