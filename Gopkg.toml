@@ -1,0 +1,23 @@
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+
+[[constraint]]
+  name = "github.com/BurntSushi/toml"
+  version = "0.3.0"
+
+[[constraint]]
+  name = "github.com/Sirupsen/logrus"
+  version = "1.0.5"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/howeyc/gopass"
+
+[prune]
+  go-tests = true
+  unused-packages = true

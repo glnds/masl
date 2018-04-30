@@ -14,6 +14,6 @@
 .glide/
 
 # TOML config files
-*.toml
+masl.toml
 
 .idea/
