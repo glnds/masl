@@ -2,9 +2,6 @@
 Pronounced [mɑzəl] form the Dutch word 'mazzel', meaning luck. 'masl' is an anagram from the word SAML.
 This tools allows you to assume an AWS role through SAML authentication.
 
-## Technology stack
-- Written in Go
-
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
@@ -52,11 +49,7 @@ How to use the damn thing
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
-## Author
-
-* **Gert Leenders**
+[SemVer](http://semver.org/) is used for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
 
 ## License
 
