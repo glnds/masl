@@ -3,11 +3,13 @@ package main
 import (
 	"os"
 	"os/user"
+	b64 "encoding/base64"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/glnds/masl/internal/masl"
 	"fmt"
 	"github.com/howeyc/gopass"
+	"bufio"
 )
 
 var logger = logrus.New()
@@ -41,13 +43,32 @@ func main() {
 		logger.SetLevel(logrus.DebugLevel)
 	}
 
+	// First, generate a new OneLogin API token
+	apiToken := masl.GenerateToken(conf, logger)
+
 	// As for the user's password
 	fmt.Print("OneLogin Password: ")
-	password, err := gopass.GetPasswdMasked()
+	password, _ := gopass.GetPasswdMasked()
+
+	// OneLogin SAML assertion API call
+	samlAssertionData, err := masl.SAMLAssertion(conf, logger, string(password), apiToken)
 	if err != nil {
+		fmt.Println(err)
 		logger.Fatal(err)
 	}
-	// Generate a new OneLogin API APITokenResponse
-	apiToken := masl.GenerateToken(conf, logger)
-	masl.SAMLAssertion(conf, logger, string(password), apiToken)
+
+	// As for a new otp
+	fmt.Print("OneLogin Protect Token: ")
+	reader := bufio.NewReader(os.Stdin)
+	otp, _ := reader.ReadString('\n')
+
+	// OneLogin Verify MFA API call
+	data, err := masl.VerifyMFA(conf, logger, samlAssertionData, otp, apiToken)
+	if err != nil {
+		fmt.Println(err)
+		logger.Fatal(err)
+	}
+	sDec, _ := b64.StdEncoding.DecodeString(data)
+	fmt.Println(string(sDec))
+	fmt.Println()
 }

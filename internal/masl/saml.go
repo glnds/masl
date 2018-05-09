@@ -6,20 +6,18 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"time"
-
-	"fmt"
-	"os"
-
 	"github.com/Sirupsen/logrus"
+	"errors"
+	"strconv"
 )
 
 const (
-	generateTokenAPI  = "auth/oauth2/token"
-	samlAssertionAPI  = "api/1/saml_assertion"
-	samlAssertionAPI2 = "api/1/saml_assertion"
+	generateTokenAPI = "auth/oauth2/token"
+	samlAssertionAPI = "api/1/saml_assertion"
+	verifyFactorAPI  = "api/1/saml_assertion/verify_factor"
 )
 
-// APITokenResponse represents the OnleLogin Generate API Token reponse
+// APITokenResponse represents the OneLogin Generate API Token response
 type APITokenResponse struct {
 	Status struct {
 		Error   bool   `json:"error"`
@@ -37,7 +35,7 @@ type APITokenResponse struct {
 	} `json:"data"`
 }
 
-// SAMLAssertionRequest represents the OnleLogin SAML Assertion request
+// SAMLAssertionRequest represents the OneLogin SAML Assertion request
 type SAMLAssertionRequest struct {
 	UsernameOrEmail string `json:"username_or_email"`
 	Password        string `json:"password"`
@@ -45,7 +43,7 @@ type SAMLAssertionRequest struct {
 	Subdomain       string `json:"subdomain"`
 }
 
-// SAMLAssertionResponse represents the OnleLogin SAML Assertion response
+// SAMLAssertionResponse represents the OneLogin SAML Assertion response
 type SAMLAssertionResponse struct {
 	Status struct {
 		Type    string `json:"type"`
@@ -55,12 +53,12 @@ type SAMLAssertionResponse struct {
 	} `json:"status"`
 	Data []struct {
 		CallbackURL string `json:"callback_url"`
-		Devices     []struct {
+		Devices []struct {
 			DeviceID   int    `json:"device_id"`
 			DeviceType string `json:"device_type"`
 		} `json:"devices"`
 		StateToken string `json:"state_token"`
-		User       struct {
+		User struct {
 			Email     string `json:"email"`
 			Lastname  string `json:"lastname"`
 			Username  string `json:"username"`
@@ -70,12 +68,29 @@ type SAMLAssertionResponse struct {
 	} `json:"data"`
 }
 
-// VerifyMFARequest represents the OnleLogin Verify MFA request
+// SAMLAssertionData, internal SAMLAssertionResponse representation
+type SAMLAssertionData struct {
+	StateToken string
+	DeviceID   int
+}
+
+// VerifyMFARequest represents the OneLogin Verify MFA request
 type VerifyMFARequest struct {
 	AppID      string `json:"app_id"`
 	OtpToken   string `json:"otp_token"`
 	DeviceID   string `json:"device_id"`
 	StateToken string `json:"state_token"`
+}
+
+// VerifyMFARequest represents the OneLogin Verify MFA response
+type VerifyMFAResponse struct {
+	Status struct {
+		Type    string `json:"type"`
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+		Error   bool   `json:"error"`
+	} `json:"status"`
+	Data string `json:"data"`
 }
 
 var httpClient = &http.Client{Timeout: 10 * time.Second}
@@ -91,7 +106,6 @@ func logResponse(log *logrus.Logger, resp *http.Response) {
 }
 
 // GenerateToken Call to https://developers.onelogin.com/api-docs/1/oauth20-tokens/generate-tokens
-// Generate an access token and refresh token to access onelogin's resource APIs.
 func GenerateToken(conf Config, log *logrus.Logger) string {
 
 	url := conf.BaseURL + generateTokenAPI
@@ -106,7 +120,7 @@ func GenerateToken(conf Config, log *logrus.Logger) string {
 }
 
 // SAMLAssertion Call to https://api.eu.onelogin.com/api/1/saml_assertion
-func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken string) {
+func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken string) (SAMLAssertionData, error) {
 
 	url := conf.BaseURL + samlAssertionAPI
 	requestBody, err := json.Marshal(SAMLAssertionRequest{
@@ -122,9 +136,39 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 	samlAssertion := SAMLAssertionResponse{}
 	httpRequest(url, auth, requestBody, log, &samlAssertion)
 
-	if samlAssertion.Status.Code == 401 {
-		fmt.Print("Password doesn't match :(")
-		os.Exit(0)
+	var data SAMLAssertionData
+	if samlAssertion.Status.Code == 200 {
+		//TODO: MFA-less authentication is not yet implemented
+		data = SAMLAssertionData{
+			samlAssertion.Data[0].StateToken,
+			samlAssertion.Data[0].Devices[0].DeviceID}
+		return data, nil
+	} else {
+		return data, errors.New(samlAssertion.Status.Message)
+	}
+}
+
+// VerifyMFA Call to https://api.eu.onelogin.com/api/1/saml_assertion/verify_factor
+func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp string, apiToken string) (string, error) {
+
+	url := conf.BaseURL + verifyFactorAPI
+	requestBody, err := json.Marshal(VerifyMFARequest{
+		AppID:      conf.AppID,
+		OtpToken:   otp,
+		DeviceID:   strconv.Itoa(data.DeviceID),
+		StateToken: data.StateToken})
+	if err != nil {
+		log.Fatalln(err)
+	}
+	auth := "bearer:" + apiToken
+
+	mfaResponse := VerifyMFAResponse{}
+	httpRequest(url, auth, requestBody, log, &mfaResponse)
+
+	if mfaResponse.Status.Code == 200 {
+		return mfaResponse.Data, nil
+	} else {
+		return "", errors.New(mfaResponse.Status.Message)
 	}
 }
 
