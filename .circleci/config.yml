@@ -14,7 +14,3 @@ jobs:
       # - run: go get -v -t -d ./...
       # - run: go test -v ./...
       - run: go build cmd/masl/masl.go
-
-notify:
-  webhooks:
-    - url: https://hooks.microbadger.com/images/glnds/backtrakk/Tc_qc0iE7jXTU5K8D0T8nVWM55o=

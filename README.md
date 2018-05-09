@@ -1,4 +1,6 @@
 # MASL
+[![Known Vulnerabilities](https://snyk.io/test/github/glnds/masl/badge.svg)](https://snyk.io/test/github/glnds/masl)
+
 Pronounced [mɑzəl] form the Dutch word 'mazzel', meaning luck. 'masl' is an anagram from the word SAML.
 This tools allows you to assume an AWS role through SAML authentication.
 
