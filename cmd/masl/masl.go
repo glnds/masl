@@ -1,15 +1,15 @@
 package main
 
 import (
+	b64 "encoding/base64"
 	"os"
 	"os/user"
-	b64 "encoding/base64"
 
+	"bufio"
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/glnds/masl/internal/masl"
-	"fmt"
 	"github.com/howeyc/gopass"
-	"bufio"
 )
 
 var logger = logrus.New()
