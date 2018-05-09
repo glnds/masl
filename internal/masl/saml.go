@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/Sirupsen/logrus"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
 	"time"
+
+	"github.com/Sirupsen/logrus"
 )
 
 const (
@@ -68,7 +69,7 @@ type SAMLAssertionResponse struct {
 	} `json:"data"`
 }
 
-// SAMLAssertionData, internal SAMLAssertionResponse representation
+// SAMLAssertionData internal SAMLAssertionResponse representation
 type SAMLAssertionData struct {
 	StateToken string
 	DeviceID   int
@@ -82,7 +83,7 @@ type VerifyMFARequest struct {
 	StateToken string `json:"state_token"`
 }
 
-// VerifyMFARequest represents the OneLogin Verify MFA response
+// VerifyMFAResponse represents the OneLogin Verify MFA response
 type VerifyMFAResponse struct {
 	Status struct {
 		Type    string `json:"type"`
@@ -143,9 +144,8 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 			samlAssertion.Data[0].StateToken,
 			samlAssertion.Data[0].Devices[0].DeviceID}
 		return data, nil
-	} else {
-		return data, errors.New(samlAssertion.Status.Message)
 	}
+	return data, errors.New(samlAssertion.Status.Message)
 }
 
 // VerifyMFA Call to https://api.eu.onelogin.com/api/1/saml_assertion/verify_factor
@@ -167,9 +167,9 @@ func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp stri
 
 	if mfaResponse.Status.Code == 200 {
 		return mfaResponse.Data, nil
-	} else {
-		return "", errors.New(mfaResponse.Status.Message)
 	}
+
+	return "", errors.New(mfaResponse.Status.Message)
 }
 
 func httpRequest(url string, auth string, jsonStr []byte, log *logrus.Logger, target interface{}) {
