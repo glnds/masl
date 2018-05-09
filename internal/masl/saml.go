@@ -3,12 +3,12 @@ package masl
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"github.com/Sirupsen/logrus"
 	"net/http"
 	"net/http/httputil"
-	"time"
-	"github.com/Sirupsen/logrus"
-	"errors"
 	"strconv"
+	"time"
 )
 
 const (
@@ -53,12 +53,12 @@ type SAMLAssertionResponse struct {
 	} `json:"status"`
 	Data []struct {
 		CallbackURL string `json:"callback_url"`
-		Devices []struct {
+		Devices     []struct {
 			DeviceID   int    `json:"device_id"`
 			DeviceType string `json:"device_type"`
 		} `json:"devices"`
 		StateToken string `json:"state_token"`
-		User struct {
+		User       struct {
 			Email     string `json:"email"`
 			Lastname  string `json:"lastname"`
 			Username  string `json:"username"`
