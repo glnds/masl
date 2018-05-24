@@ -65,12 +65,12 @@ func main() {
 	otp, _ := reader.ReadString('\n')
 
 	// OneLogin Verify MFA API call
-	data, err := masl.VerifyMFA(conf, logger, samlAssertionData, otp, apiToken)
+	samlAssertion, err := masl.VerifyMFA(conf, logger, samlAssertionData, otp, apiToken)
 	if err != nil {
 		fmt.Println(err)
 		logger.Fatal(err)
 	}
-	sDec, _ := b64.StdEncoding.DecodeString(data)
+	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
 
 	var samlResponse masl.Response
 	xml.Unmarshal(sDec, &samlResponse)

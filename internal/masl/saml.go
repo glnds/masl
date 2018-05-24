@@ -94,6 +94,12 @@ type VerifyMFAResponse struct {
 	Data string `json:"data"`
 }
 
+type SAMLAssertionRole struct {
+	PrincipalArn string
+	RoleArn      string
+	Identifier   string
+}
+
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
 func logRequest(log *logrus.Logger, req *http.Request) {
