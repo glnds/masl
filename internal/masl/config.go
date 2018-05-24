@@ -17,6 +17,10 @@ type Config struct {
 	Subdomain    string
 	Username     string
 	Debug        bool
+	Accounts     []struct {
+		Id   string
+		Name string
+	}
 }
 
 // GetConfig reads the masl.toml configuration file for initialization.
@@ -41,6 +45,7 @@ func GetConfig(logger *logrus.Logger) Config {
 		"subdomain":    conf.Subdomain,
 		"username":     conf.Username,
 		"debug":        conf.Debug,
+		"#accounts":    len(conf.Accounts),
 	}).Info("Config settings")
 
 	return conf
