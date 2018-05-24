@@ -2,11 +2,13 @@ package main
 
 import (
 	b64 "encoding/base64"
+	"encoding/xml"
 	"os"
 	"os/user"
 
 	"bufio"
 	"fmt"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/glnds/masl/internal/masl"
 	"github.com/howeyc/gopass"
@@ -69,6 +71,17 @@ func main() {
 		logger.Fatal(err)
 	}
 	sDec, _ := b64.StdEncoding.DecodeString(data)
-	fmt.Println(string(sDec))
-	fmt.Println()
+
+	var samlResponse masl.Response
+	xml.Unmarshal(sDec, &samlResponse)
+
+	attrs := samlResponse.Assertion.AttributeStatement.Attributes
+
+	for i := 0; i < len(attrs); i++ {
+		values := attrs[i].Values
+		for j := 0; j < len(values); j++ {
+			fmt.Println(values[j].Value)
+		}
+	}
+	// fmt.Println(string(sDec))
 }
