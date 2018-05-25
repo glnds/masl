@@ -72,6 +72,6 @@ func main() {
 	roles := masl.ParseSAMLAssertion(conf, samlAssertion)
 	for index, role := range roles {
 		role.ID = index + 1
-		fmt.Printf("[%d] > %s:%-15s :: %s\n", role.ID, role.AccountID, role.RoleArn[31:], role.AccountName)
+		fmt.Printf("[%2d] > %s:%-15s :: %s\n", role.ID, role.AccountID, role.RoleArn[31:], role.AccountName)
 	}
 }
