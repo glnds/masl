@@ -1,8 +1,6 @@
 package main
 
 import (
-	b64 "encoding/base64"
-	"encoding/xml"
 	"os"
 	"os/user"
 
@@ -48,7 +46,7 @@ func main() {
 	// First, generate a new OneLogin API token
 	apiToken := masl.GenerateToken(conf, logger)
 
-	// As for the user's password
+	// Ask for the user's password
 	fmt.Print("OneLogin Password: ")
 	password, _ := gopass.GetPasswdMasked()
 
@@ -59,7 +57,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	// As for a new otp
+	// Ask for a new otp
 	fmt.Print("OneLogin Protect Token: ")
 	reader := bufio.NewReader(os.Stdin)
 	otp, _ := reader.ReadString('\n')
@@ -70,18 +68,10 @@ func main() {
 		fmt.Println(err)
 		logger.Fatal(err)
 	}
-	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
 
-	var samlResponse masl.Response
-	xml.Unmarshal(sDec, &samlResponse)
-
-	attrs := samlResponse.Assertion.AttributeStatement.Attributes
-
-	for i := 0; i < len(attrs); i++ {
-		values := attrs[i].Values
-		for j := 0; j < len(values); j++ {
-			fmt.Println(values[j].Value)
-		}
+	roles := masl.ParseSAMLAssertion(conf, samlAssertion)
+	for index, role := range roles {
+		role.ID = index + 1
+		fmt.Printf("[%d] > %s:%-15s :: %s\n", role.ID, role.AccountID, role.RoleArn[31:], role.AccountName)
 	}
-	// fmt.Println(string(sDec))
 }

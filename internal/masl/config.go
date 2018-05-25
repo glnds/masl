@@ -18,7 +18,7 @@ type Config struct {
 	Username     string
 	Debug        bool
 	Accounts     []struct {
-		Id   string
+		ID   string
 		Name string
 	}
 }
@@ -49,4 +49,15 @@ func GetConfig(logger *logrus.Logger) Config {
 	}).Info("Config settings")
 
 	return conf
+}
+
+// SearchAccounts search an account name for a given acount id
+func SearchAccounts(conf Config, accountID string) string {
+
+	for _, account := range conf.Accounts {
+		if account.ID == accountID {
+			return account.Name
+		}
+	}
+	return ""
 }

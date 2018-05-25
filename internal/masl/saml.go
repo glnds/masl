@@ -2,11 +2,15 @@ package masl
 
 import (
 	"bytes"
+	b64 "encoding/base64"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"net/http"
 	"net/http/httputil"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -94,10 +98,22 @@ type VerifyMFAResponse struct {
 	Data string `json:"data"`
 }
 
+// SAMLAssertionRole represents a Role which could be assumed on AWS
 type SAMLAssertionRole struct {
+	ID           int
 	PrincipalArn string
 	RoleArn      string
-	Identifier   string
+	AccountID    string
+	AccountName  string
+}
+
+// RolesByName roles sorted by account name
+type RolesByName []*SAMLAssertionRole
+
+func (byName RolesByName) Len() int      { return len(byName) }
+func (byName RolesByName) Swap(i, j int) { byName[i], byName[j] = byName[j], byName[i] }
+func (byName RolesByName) Less(i, j int) bool {
+	return strings.Compare(byName[i].AccountName, byName[j].AccountName) == -1
 }
 
 var httpClient = &http.Client{Timeout: 10 * time.Second}
@@ -176,6 +192,39 @@ func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp stri
 	}
 
 	return "", errors.New(mfaResponse.Status.Message)
+}
+
+// ParseSAMLAssertion parse the SAMLAssertion reponse data into a list of SAMLAssertionRoles
+func ParseSAMLAssertion(conf Config, samlAssertion string) []*SAMLAssertionRole {
+
+	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
+
+	var samlResponse Response
+	xml.Unmarshal(sDec, &samlResponse)
+
+	attributes := samlResponse.Assertion.AttributeStatement.Attributes
+
+	roles := []*SAMLAssertionRole{}
+
+	for i := 0; i < len(attributes); i++ {
+		values := attributes[i].Values
+		for j := 0; j < len(values); j++ {
+			if strings.Contains(values[j].Value, "role") {
+
+				data := strings.Split(values[j].Value, ",")
+
+				role := new(SAMLAssertionRole)
+				role.RoleArn = data[0]
+				role.PrincipalArn = data[1]
+				role.AccountID = data[1][13:25]
+				role.AccountName = SearchAccounts(conf, role.AccountID)
+
+				roles = append(roles, role)
+			}
+		}
+	}
+	sort.Sort(RolesByName(roles))
+	return roles
 }
 
 func httpRequest(url string, auth string, jsonStr []byte, log *logrus.Logger, target interface{}) {
