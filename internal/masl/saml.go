@@ -194,7 +194,7 @@ func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp stri
 	return "", errors.New(mfaResponse.Status.Message)
 }
 
-// ParseSAMLAssertion parse the SAMLAssertion reponse data into a list of SAMLAssertionRoles
+// ParseSAMLAssertion parse the SAMLAssertion response data into a list of SAMLAssertionRoles
 func ParseSAMLAssertion(conf Config, samlAssertion string) []*SAMLAssertionRole {
 
 	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
