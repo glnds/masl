@@ -1,0 +1,40 @@
+{
+    "vendor": true,
+    "Deadline": "2m",
+    "Sort": [
+        "linter",
+        "severity",
+        "path",
+        "line"
+    ],
+    "DisableAll": true,
+    "Enable": [
+        "deadcode",
+        "dupl",
+        "gas",
+        "goconst",
+        "gocyclo",
+        "gofmt",
+        "goimports",
+        "golint",
+        "gosimple",
+        "gotype",
+        "gotypex",
+        "ineffassign",
+        "interfacer",
+        "lll",
+        "maligned",
+        "megacheck",
+        "misspell",
+        "nakedret",
+        "structcheck",
+        "unconvert",
+        "unparam",
+        "unused",
+        "varcheck",
+        "vet",
+        "vetshadow"
+    ],
+    "Cyclo": 10,
+    "LineLength": 120
+}
