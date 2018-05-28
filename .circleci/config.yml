@@ -14,5 +14,5 @@ jobs:
       - run: dep ensure --vendor-only
       - run: go vet ./...
       - run: go test -v ./...
-      - run: gometalinter . --disable gocyclo
+      - run: gometalinter ./... --vendor
       - run: go build cmd/masl/masl.go
