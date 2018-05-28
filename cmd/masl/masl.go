@@ -34,7 +34,7 @@ func main() {
 		logger.Info("Failed to logger to file, using default stderr")
 	}
 
-	logger.Info("--------------- w00t w00t masl for you!?  ---------------")
+	logger.Info("------------------ w00t w00t masl for you!?  ------------------")
 	logger.SetLevel(logrus.InfoLevel)
 
 	// Read config file
