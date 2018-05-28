@@ -16,8 +16,9 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
+/* #nosec */
 const (
-	generateTokenAPI = "auth/oauth2/token" // #nosec
+	generateTokenAPI = "auth/oauth2/token"
 	samlAssertionAPI = "api/1/saml_assertion"
 	verifyFactorAPI  = "api/1/saml_assertion/verify_factor"
 )
