@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	generateTokenAPI = "auth/oauth2/token"
+	generateTokenAPI = "auth/oauth2/token" // #nosec
 	samlAssertionAPI = "api/1/saml_assertion"
 	verifyFactorAPI  = "api/1/saml_assertion/verify_factor"
 )
