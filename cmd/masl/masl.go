@@ -6,6 +6,8 @@ import (
 
 	"bufio"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/glnds/masl/internal/masl"
@@ -33,6 +35,7 @@ func main() {
 	} else {
 		logger.Info("Failed to logger to file, using default stderr")
 	}
+	defer file.Close()
 
 	logger.Info("------------------ w00t w00t masl for you!?  ------------------")
 	logger.SetLevel(logrus.InfoLevel)
@@ -45,6 +48,8 @@ func main() {
 
 	// First, generate a new OneLogin API token
 	apiToken := masl.GenerateToken(conf, logger)
+
+	masl.SetCredentials(usr.HomeDir, logger)
 
 	// Ask for the user's password
 	fmt.Print("OneLogin Password: ")
@@ -80,5 +85,13 @@ func main() {
 	fmt.Print("Enter a role number:")
 	reader = bufio.NewReader(os.Stdin)
 	roleNumber, _ := reader.ReadString('\n')
-	fmt.Printf("[%v]", roleNumber)
+	roleNumber = strings.TrimSuffix(roleNumber, "\n")
+	index, err := strconv.Atoi(roleNumber)
+	if err != nil {
+		fmt.Println(err)
+		logger.Fatal(err)
+	}
+	role := roles[index-1]
+
+	masl.AssumeRole(samlAssertion, role, logger)
 }

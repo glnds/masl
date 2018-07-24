@@ -6,15 +6,18 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	// "github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sts"
 )
 
 /* #nosec */
@@ -200,6 +203,7 @@ func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp stri
 func ParseSAMLAssertion(conf Config, samlAssertion string) []*SAMLAssertionRole {
 
 	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
+	fmt.Printf("%v\n", string(sDec[:]))
 
 	var samlResponse Response
 	xml.Unmarshal(sDec, &samlResponse)
@@ -251,11 +255,41 @@ func httpRequest(url string, auth string, jsonStr []byte, log *logrus.Logger, ta
 }
 
 // AssumeRole assume a role on AWS
-func AssumeRole() {
-	// duration := int64(28800)
-	// test := sts.AssumeRoleWithSAMLInput{
-	// 	DurationSeconds: &duration,
-	// 	PrincipalArn:    "",
-	// 	RoleArn:         "",
-	// 	SAMLAssertion:   ""}
+func AssumeRole(samlAssertion string, role *SAMLAssertionRole, log *logrus.Logger) {
+	sess := session.Must(session.NewSession())
+	svc := sts.New(sess)
+
+	duration := int64(28800)
+	test := sts.AssumeRoleWithSAMLInput{
+		DurationSeconds: &duration,
+		PrincipalArn:    &role.PrincipalArn,
+		RoleArn:         &role.RoleArn,
+		SAMLAssertion:   &samlAssertion}
+	output, err := svc.AssumeRoleWithSAML(&test)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(output)
+}
+
+// SetCredentials Apply the STS credentials on the host
+func SetCredentials(homeDir string, log *logrus.Logger) {
+	initializeCredentials(homeDir, log)
+}
+
+func initializeCredentials(homeDir string, log *logrus.Logger) {
+	filename := os.Getenv("AWS_SHARED_CREDENTIALS_FILE")
+	if filename == "" {
+		filename = homeDir + "/.aws/credentials"
+	}
+	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
+	fmt.Println(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	_, err = file.WriteString("test123")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
