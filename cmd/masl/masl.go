@@ -69,9 +69,16 @@ func main() {
 		logger.Fatal(err)
 	}
 
+	// Print all SAMLAssertion Roles
 	roles := masl.ParseSAMLAssertion(conf, samlAssertion)
 	for index, role := range roles {
 		role.ID = index + 1
 		fmt.Printf("[%2d] > %s:%-15s :: %s\n", role.ID, role.AccountID, role.RoleArn[31:], role.AccountName)
 	}
+
+	// Ask for a new otp
+	fmt.Print("Enter a role number:")
+	reader = bufio.NewReader(os.Stdin)
+	roleNumber, _ := reader.ReadString('\n')
+	fmt.Printf("[%v]", roleNumber)
 }

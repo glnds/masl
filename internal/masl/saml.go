@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	// "github.com/aws/aws-sdk-go/service/sts"
 )
 
 /* #nosec */
@@ -247,4 +248,14 @@ func httpRequest(url string, auth string, jsonStr []byte, log *logrus.Logger, ta
 	logResponse(log, resp)
 
 	json.NewDecoder(resp.Body).Decode(target)
+}
+
+// AssumeRole assume a role on AWS
+func AssumeRole() {
+	// duration := int64(28800)
+	// test := sts.AssumeRoleWithSAMLInput{
+	// 	DurationSeconds: &duration,
+	// 	PrincipalArn:    "",
+	// 	RoleArn:         "",
+	// 	SAMLAssertion:   ""}
 }
