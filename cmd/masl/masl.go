@@ -41,7 +41,7 @@ func main() {
 	logger.SetLevel(logrus.InfoLevel)
 
 	// Read config file
-	conf := masl.GetMaslConfig(logger)
+	conf := masl.GetConfig(logger)
 	if conf.Debug {
 		logger.SetLevel(logrus.DebugLevel)
 	}

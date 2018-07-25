@@ -135,7 +135,7 @@ func logResponse(log *logrus.Logger, resp *http.Response) {
 }
 
 // GenerateToken Call to https://developers.onelogin.com/api-docs/1/oauth20-tokens/generate-tokens
-func GenerateToken(conf MaslConfig, log *logrus.Logger) string {
+func GenerateToken(conf Config, log *logrus.Logger) string {
 
 	url := conf.BaseURL + generateTokenAPI
 	requestBody := []byte(`{"grant_type":"client_credentials"}`)
@@ -149,7 +149,7 @@ func GenerateToken(conf MaslConfig, log *logrus.Logger) string {
 }
 
 // SAMLAssertion Call to https://api.eu.onelogin.com/api/1/saml_assertion
-func SAMLAssertion(conf MaslConfig, log *logrus.Logger, password string, apiToken string) (SAMLAssertionData, error) {
+func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken string) (SAMLAssertionData, error) {
 
 	url := conf.BaseURL + samlAssertionAPI
 	requestBody, err := json.Marshal(SAMLAssertionRequest{
@@ -177,7 +177,8 @@ func SAMLAssertion(conf MaslConfig, log *logrus.Logger, password string, apiToke
 }
 
 // VerifyMFA Call to https://api.eu.onelogin.com/api/1/saml_assertion/verify_factor
-func VerifyMFA(conf MaslConfig, log *logrus.Logger, data SAMLAssertionData, otp string, apiToken string) (string, error) {
+func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp string,
+	apiToken string) (string, error) {
 
 	url := conf.BaseURL + verifyFactorAPI
 	requestBody, err := json.Marshal(VerifyMFARequest{
@@ -201,7 +202,7 @@ func VerifyMFA(conf MaslConfig, log *logrus.Logger, data SAMLAssertionData, otp 
 }
 
 // ParseSAMLAssertion parse the SAMLAssertion response data into a list of SAMLAssertionRoles
-func ParseSAMLAssertion(conf MaslConfig, samlAssertion string) []*SAMLAssertionRole {
+func ParseSAMLAssertion(conf Config, samlAssertion string) []*SAMLAssertionRole {
 
 	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
 	fmt.Printf("%v\n", string(sDec[:]))
@@ -282,7 +283,6 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 	}
 	cfg, err := ini.Load(filename)
 	if err != nil {
-		fmt.Println(filename)
 		log.Fatal(err)
 	}
 	sec := cfg.Section("masl")
@@ -290,4 +290,7 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 	sec.NewKey("aws_secret_access_key", *assertionOutput.Credentials.SecretAccessKey)
 	sec.NewKey("aws_session_token", *assertionOutput.Credentials.SessionToken)
 	err = cfg.SaveTo(homeDir + "/.aws/credentials")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
