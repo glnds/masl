@@ -8,8 +8,8 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
-// Config represents the masl config file
-type Config struct {
+// MaslConfig represents the masl config file
+type MaslConfig struct {
 	BaseURL      string
 	ClientID     string
 	ClientSecret string
@@ -23,8 +23,8 @@ type Config struct {
 	}
 }
 
-// GetConfig reads the masl.toml configuration file for initialization.
-func GetConfig(logger *logrus.Logger) Config {
+// GetMaslConfig reads the masl.toml configuration file for initialization.
+func GetMaslConfig(logger *logrus.Logger) MaslConfig {
 
 	usr, err := user.Current()
 	if err != nil {
@@ -32,7 +32,7 @@ func GetConfig(logger *logrus.Logger) Config {
 	}
 
 	// Read masl.toml config file for initialization
-	var conf Config
+	var conf MaslConfig
 	if _, err := toml.DecodeFile(usr.HomeDir+"/masl.toml", &conf); err != nil {
 		log.Fatal(err.Error())
 	}
@@ -52,7 +52,7 @@ func GetConfig(logger *logrus.Logger) Config {
 }
 
 // SearchAccounts search an account name for a given acount id
-func SearchAccounts(conf Config, accountID string) string {
+func SearchAccounts(conf MaslConfig, accountID string) string {
 
 	for _, account := range conf.Accounts {
 		if account.ID == accountID {

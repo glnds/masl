@@ -18,6 +18,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"gopkg.in/ini.v1"
 )
 
 /* #nosec */
@@ -134,7 +135,7 @@ func logResponse(log *logrus.Logger, resp *http.Response) {
 }
 
 // GenerateToken Call to https://developers.onelogin.com/api-docs/1/oauth20-tokens/generate-tokens
-func GenerateToken(conf Config, log *logrus.Logger) string {
+func GenerateToken(conf MaslConfig, log *logrus.Logger) string {
 
 	url := conf.BaseURL + generateTokenAPI
 	requestBody := []byte(`{"grant_type":"client_credentials"}`)
@@ -148,7 +149,7 @@ func GenerateToken(conf Config, log *logrus.Logger) string {
 }
 
 // SAMLAssertion Call to https://api.eu.onelogin.com/api/1/saml_assertion
-func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken string) (SAMLAssertionData, error) {
+func SAMLAssertion(conf MaslConfig, log *logrus.Logger, password string, apiToken string) (SAMLAssertionData, error) {
 
 	url := conf.BaseURL + samlAssertionAPI
 	requestBody, err := json.Marshal(SAMLAssertionRequest{
@@ -176,7 +177,7 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 }
 
 // VerifyMFA Call to https://api.eu.onelogin.com/api/1/saml_assertion/verify_factor
-func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp string, apiToken string) (string, error) {
+func VerifyMFA(conf MaslConfig, log *logrus.Logger, data SAMLAssertionData, otp string, apiToken string) (string, error) {
 
 	url := conf.BaseURL + verifyFactorAPI
 	requestBody, err := json.Marshal(VerifyMFARequest{
@@ -200,7 +201,7 @@ func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp stri
 }
 
 // ParseSAMLAssertion parse the SAMLAssertion response data into a list of SAMLAssertionRoles
-func ParseSAMLAssertion(conf Config, samlAssertion string) []*SAMLAssertionRole {
+func ParseSAMLAssertion(conf MaslConfig, samlAssertion string) []*SAMLAssertionRole {
 
 	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
 	fmt.Printf("%v\n", string(sDec[:]))
@@ -255,41 +256,38 @@ func httpRequest(url string, auth string, jsonStr []byte, log *logrus.Logger, ta
 }
 
 // AssumeRole assume a role on AWS
-func AssumeRole(samlAssertion string, role *SAMLAssertionRole, log *logrus.Logger) {
-	sess := session.Must(session.NewSession())
-	svc := sts.New(sess)
+func AssumeRole(samlAssertion string, role *SAMLAssertionRole, log *logrus.Logger) *sts.AssumeRoleWithSAMLOutput {
+	session := session.Must(session.NewSession())
+	stsClient := sts.New(session)
 
 	duration := int64(28800)
-	test := sts.AssumeRoleWithSAMLInput{
+	input := sts.AssumeRoleWithSAMLInput{
 		DurationSeconds: &duration,
 		PrincipalArn:    &role.PrincipalArn,
 		RoleArn:         &role.RoleArn,
 		SAMLAssertion:   &samlAssertion}
-	output, err := svc.AssumeRoleWithSAML(&test)
+
+	output, err := stsClient.AssumeRoleWithSAML(&input)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(output)
+	return output
 }
 
 // SetCredentials Apply the STS credentials on the host
-func SetCredentials(homeDir string, log *logrus.Logger) {
-	initializeCredentials(homeDir, log)
-}
-
-func initializeCredentials(homeDir string, log *logrus.Logger) {
+func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir string, log *logrus.Logger) {
 	filename := os.Getenv("AWS_SHARED_CREDENTIALS_FILE")
 	if filename == "" {
 		filename = homeDir + "/.aws/credentials"
 	}
-	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
-	fmt.Println(file)
+	cfg, err := ini.Load(filename)
 	if err != nil {
+		fmt.Println(filename)
 		log.Fatal(err)
 	}
-	defer file.Close()
-	_, err = file.WriteString("test123")
-	if err != nil {
-		log.Fatal(err)
-	}
+	sec := cfg.Section("masl")
+	sec.NewKey("aws_access_key_id", *assertionOutput.Credentials.AccessKeyId)
+	sec.NewKey("aws_secret_access_key", *assertionOutput.Credentials.SecretAccessKey)
+	sec.NewKey("aws_session_token", *assertionOutput.Credentials.SessionToken)
+	err = cfg.SaveTo(homeDir + "/.aws/credentials")
 }

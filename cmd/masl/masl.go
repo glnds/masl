@@ -41,15 +41,13 @@ func main() {
 	logger.SetLevel(logrus.InfoLevel)
 
 	// Read config file
-	conf := masl.GetConfig(logger)
+	conf := masl.GetMaslConfig(logger)
 	if conf.Debug {
 		logger.SetLevel(logrus.DebugLevel)
 	}
 
 	// First, generate a new OneLogin API token
 	apiToken := masl.GenerateToken(conf, logger)
-
-	masl.SetCredentials(usr.HomeDir, logger)
 
 	// Ask for the user's password
 	fmt.Print("OneLogin Password: ")
@@ -93,5 +91,9 @@ func main() {
 	}
 	role := roles[index-1]
 
-	masl.AssumeRole(samlAssertion, role, logger)
+	assertionOutput := masl.AssumeRole(samlAssertion, role, logger)
+	masl.SetCredentials(assertionOutput, usr.HomeDir, logger)
+	fmt.Println("w00t w00t masl for you!")
+	fmt.Printf("Assumed User: %v\n", *assertionOutput.AssumedRoleUser.Arn)
+	fmt.Printf("Token will expire on: %v\n", *assertionOutput.Credentials.Expiration)
 }

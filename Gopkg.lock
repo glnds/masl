@@ -85,9 +85,15 @@
   ]
   revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
 
+[[projects]]
+  name = "gopkg.in/ini.v1"
+  packages = ["."]
+  revision = "358ee7663966325963d4e8b2e1fbd570c5195153"
+  version = "v1.38.1"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5e0b5ef68af1fc37d3a61345f0bf46350511e5fabfc3256414e1fcf8a610e0d3"
+  inputs-digest = "99c9d995bf66ca1e9e2c421eaf5dc50edf9abf0ad921c35798e195a579e3e2b6"
   solver-name = "gps-cdcl"
   solver-version = 1
