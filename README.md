@@ -2,6 +2,10 @@
 [![CircleCI](https://circleci.com/gh/glnds/masl.svg?style=svg)](https://circleci.com/gh/glnds/masl)
 [![Go Report Card](https://goreportcard.com/badge/github.com/glnds/masl)](https://goreportcard.com/report/github.com/glnds/masl)
 
+
+![MASL](img/masl.png)
+
+
 Pronounced [mɑzəl] form the Dutch word 'mazzel', meaning luck. 'masl' is an anagram from the word SAML.
 This tools allows you to assume an AWS role through SAML authentication.
 
