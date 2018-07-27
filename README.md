@@ -7,20 +7,18 @@
 
 
 Pronounced [mɑzəl] form the Dutch word 'mazzel', meaning luck. 'masl' is an anagram from the word 'SAML'.
-This tools allows you to use [onelogin](https://www.onelogin.com/) to assume an AWS role through SAML authentication.
+This tool allows you to use [onelogin](https://www.onelogin.com/) to assume an AWS role through SAML authentication.
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
 ### Installation
 
-Just download the latest release: https://github.com/glnds/masl/releases
+Just download the latest release under https://github.com/glnds/masl/releases.
 
 ### Configuration
 
 All configuration is done using a ```masl.toml``` file in your user's home directory.
-The content should look like this:
+The minimal configuraton should look like this:
 ```
 
 BaseURL = 'https://api.eu.onelogin.com/'
