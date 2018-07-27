@@ -279,17 +279,27 @@ func AssumeRole(samlAssertion string, role *SAMLAssertionRole, log *logrus.Logge
 func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir string, log *logrus.Logger) {
 	filename := os.Getenv("AWS_SHARED_CREDENTIALS_FILE")
 	if filename == "" {
-		filename = homeDir + "/.aws/credentials"
+		filename = homeDir + string(os.PathSeparator) + ".aws" +
+			string(os.PathSeparator) + "credentials"
 	}
-	cfg, err := ini.Load(filename)
-	if err != nil {
-		log.Fatal(err)
+	var cfg *ini.File
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		log.Info("AWS credentials file does not exists.")
+		cfg = ini.Empty()
+		log.Info("New AWS credentials config created.")
+	} else {
+		cfg, err = ini.Load(filename)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Info("AWS credentials file loaded.")
 	}
+
 	sec := cfg.Section("masl")
 	sec.NewKey("aws_access_key_id", *assertionOutput.Credentials.AccessKeyId)
 	sec.NewKey("aws_secret_access_key", *assertionOutput.Credentials.SecretAccessKey)
 	sec.NewKey("aws_session_token", *assertionOutput.Credentials.SessionToken)
-	err = cfg.SaveTo(homeDir + "/.aws/credentials")
+	err := cfg.SaveTo(filename)
 	if err != nil {
 		log.Fatal(err)
 	}

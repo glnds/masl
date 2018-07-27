@@ -2,6 +2,7 @@ package masl
 
 import (
 	"log"
+	"os"
 	"os/user"
 
 	"github.com/BurntSushi/toml"
@@ -33,7 +34,7 @@ func GetConfig(logger *logrus.Logger) Config {
 
 	// Read masl.toml config file for initialization
 	var conf Config
-	if _, err := toml.DecodeFile(usr.HomeDir+"/masl.toml", &conf); err != nil {
+	if _, err := toml.DecodeFile(usr.HomeDir+string(os.PathSeparator)+"masl.toml", &conf); err != nil {
 		log.Fatal(err.Error())
 	}
 

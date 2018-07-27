@@ -24,8 +24,9 @@ func main() {
 	}
 
 	// Create the logger file if doesn't exist. Append to it if it already exists.
-	var filename = "/masl.log"
-	file, err := os.OpenFile(usr.HomeDir+filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
+	var filename = "masl.log"
+	file, err := os.OpenFile(usr.HomeDir+string(os.PathSeparator)+filename,
+		os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
 	Formatter := new(logrus.TextFormatter)
 	Formatter.TimestampFormat = "02-01-2006 15:04:05"
 	Formatter.FullTimestamp = true
@@ -33,7 +34,7 @@ func main() {
 	if err == nil {
 		logger.Out = file
 	} else {
-		logger.Info("Failed to logger to file, using default stderr")
+		logger.Info("Failed to log to file, using default stderr")
 	}
 	defer file.Close()
 
@@ -83,7 +84,7 @@ func main() {
 	fmt.Print("Enter a role number:")
 	reader = bufio.NewReader(os.Stdin)
 	roleNumber, _ := reader.ReadString('\n')
-	roleNumber = strings.TrimSuffix(roleNumber, "\n")
+	roleNumber = strings.TrimRight(roleNumber, "\r\n")
 	index, err := strconv.Atoi(roleNumber)
 	if err != nil {
 		fmt.Println(err)
@@ -93,6 +94,9 @@ func main() {
 
 	assertionOutput := masl.AssumeRole(samlAssertion, role, logger)
 	masl.SetCredentials(assertionOutput, usr.HomeDir, logger)
+
+	logger.Info("w00t w00t masl for you!, Succesfully authenticated.")
+
 	fmt.Println("w00t w00t masl for you!")
 	fmt.Printf("Assumed User: %v\n", *assertionOutput.AssumedRoleUser.Arn)
 	fmt.Printf("Token will expire on: %v\n", *assertionOutput.Credentials.Expiration)

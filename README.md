@@ -6,8 +6,8 @@
 ![MASL](img/masl.png)
 
 
-Pronounced [mɑzəl] form the Dutch word 'mazzel', meaning luck. 'masl' is an anagram from the word SAML.
-This tools allows you to assume an AWS role through SAML authentication.
+Pronounced [mɑzəl] form the Dutch word 'mazzel', meaning luck. 'masl' is an anagram from the word 'SAML'.
+This tools allows you to use [onelogin](https://www.onelogin.com/) to assume an AWS role through SAML authentication.
 
 ## Getting Started
 
