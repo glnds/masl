@@ -13,33 +13,37 @@ This tools allows you to use [onelogin](https://www.onelogin.com/) to assume an 
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
-### Prerequisites
-
-What things you need to install the software and how to install them
-
 ### Installation
 
-A step by step series of examples that tell you have to get a development env running
+Just download the latest release: https://github.com/glnds/masl/releases
 
 ### Configuration
 
-Explain how to configure the applcation and the possible opstions
+All configuration is done using a ```masl.toml``` file in your user's home directory.
+The content should look like this:
+```
+
+BaseURL = 'https://api.eu.onelogin.com/'
+ClientID = 'onelogin client id'
+ClientSecret = 'onelogin client secret'
+AppID = 'onelogin app id'
+Subdomain = 'subdomain of the onelogin user'
+Username = 'onelogin username or email'
+Debug = false # Set to true for debug logging
+```
 
 ### Logging
 
-How is logging configured and what is the location of the log files
+A log file ```masl.log``` is created and added on your user's home directory. The default log level is 'INFO'. For debug logging set ```Debug = true``` in ```masl.toml```.
 
 ## Running the tests
 
-Explain how to run the automated tests for this system
+TODO: Explain how to run the automated tests for this system
 
-## Deployment
-
-Add additional notes about how to deploy this on a live system
 
 ## Usage
 
-How to use the damn thing
+Just run ```masl``` on your command line.
 
 ## Built With
 
@@ -56,7 +60,7 @@ How to use the damn thing
 
 ## Versioning
 
-[SemVer](http://semver.org/) is used for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+[SemVer](http://semver.org/) is used for versioning. For the versions available, see the [tags on this repository](https://github.com/glnds/masl/tags). 
 
 ## License
 
