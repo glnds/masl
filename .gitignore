@@ -17,3 +17,5 @@
 masl.toml
 
 .idea/
+
+release/
