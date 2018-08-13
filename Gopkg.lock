@@ -44,8 +44,8 @@
     "private/protocol/xml/xmlutil",
     "service/sts"
   ]
-  revision = "bc3f534c19ffdf835e524e11f0f825b3eaf541c3"
-  version = "v1.14.31"
+  revision = "123c8c8326730972861f45fe2e6e7b1d64b4d487"
+  version = "v1.15.1"
 
 [[projects]]
   branch = "master"
@@ -83,7 +83,7 @@
     "unix",
     "windows"
   ]
-  revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
+  revision = "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e"
 
 [[projects]]
   name = "gopkg.in/ini.v1"

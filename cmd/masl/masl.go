@@ -5,6 +5,7 @@ import (
 	"os/user"
 
 	"bufio"
+	"flag"
 	"fmt"
 	"strconv"
 	"strings"
@@ -16,7 +17,16 @@ import (
 
 var logger = logrus.New()
 
+var version, build string
+
 func main() {
+
+	versionFlag := flag.Bool("v", false, "prints MASL version")
+	flag.Parse()
+	if *versionFlag {
+		fmt.Printf("masl version: %s, build: %s\n", version, build)
+		os.Exit(0)
+	}
 
 	usr, err := user.Current()
 	if err != nil {

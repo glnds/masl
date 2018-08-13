@@ -1,8 +1,19 @@
+SHELL := /bin/bash
+
 BIN_DIR := $(GOPATH)/bin
 GOMETALINTER := $(BIN_DIR)/gometalinter
 PLATFORMS := windows linux darwin
 BINARY := masl
-VERSION ?= vlatest
+
+# These will be provided to the target
+VERSION := 0.2
+BUILD := `git rev-parse HEAD`
+
+# Use linker flags to provide version/build settings to the target
+LDFLAGS=-ldflags "-X=main.version=$(VERSION) -X=main.build=$(BUILD)"
+
+
+
 
 os = $(word 1, $@)
 
@@ -24,6 +35,10 @@ $(PLATFORMS):
 	mkdir -p release
 	GOOS=$(os) GOARCH=amd64 go build -o release/$(BINARY)-$(VERSION)-$(os)-amd64 cmd/masl/masl.go 
 .PHONY: $(PLATFORMS)
+
+
+install:
+	@go install $(LDFLAGS) cmd/masl/masl.go
 
 release: windows linux darwin
 .PHONY: release
