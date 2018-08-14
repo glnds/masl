@@ -44,8 +44,8 @@
     "private/protocol/xml/xmlutil",
     "service/sts"
   ]
-  revision = "123c8c8326730972861f45fe2e6e7b1d64b4d487"
-  version = "v1.15.1"
+  revision = "f831d5a0822a1ad72420ab18c6269bca1ddaf490"
+  version = "v1.15.11"
 
 [[projects]]
   branch = "master"
@@ -74,7 +74,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "c126467f60eb25f8f27e5a981f32a87e3965053f"
+  revision = "de0752318171da717af4ce24d0a2e8626afaeb11"
 
 [[projects]]
   branch = "master"
@@ -83,7 +83,7 @@
     "unix",
     "windows"
   ]
-  revision = "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e"
+  revision = "4e1fef5609515ec7a2cee7b5de30ba6d9b438cbf"
 
 [[projects]]
   name = "gopkg.in/ini.v1"
