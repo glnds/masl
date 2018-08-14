@@ -23,6 +23,9 @@ $(GOMETALINTER):
 	go get -u github.com/alecthomas/gometalinter
 	gometalinter --install &> /dev/null
 
+build:
+	go build cmd/masl/masl.go
+
 test:
 	go test $(PKGS)
 .PHONY: test
@@ -35,7 +38,6 @@ $(PLATFORMS):
 	mkdir -p release
 	GOOS=$(os) GOARCH=amd64 go build -o release/$(BINARY)-$(VERSION)-$(os)-amd64 cmd/masl/masl.go 
 .PHONY: $(PLATFORMS)
-
 
 install:
 	@go install $(LDFLAGS) cmd/masl/masl.go
