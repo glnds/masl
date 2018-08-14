@@ -28,7 +28,7 @@ clean:
 .PHONY: clean
 
 build:
-	go build cmd/masl/masl.go
+	go build $(LDFLAGS) cmd/masl/masl.go
 .PHONY: build
 
 test:
@@ -41,7 +41,7 @@ lint: $(GOMETALINTER)
 
 $(PLATFORMS):
 	mkdir -p release
-	GOOS=$(os) GOARCH=amd64 go build -o release/$(BINARY)-v$(VERSION)-$(os)-amd64 cmd/masl/masl.go 
+	GOOS=$(os) GOARCH=amd64 go build $(LDFLAGS) -o release/$(BINARY)-v$(VERSION)-$(os)-amd64 cmd/masl/masl.go
 .PHONY: $(PLATFORMS)
 
 install:
