@@ -21,19 +21,12 @@ var version, build string
 
 func main() {
 
-	versionFlag := flag.Bool("v", false, "prints MASL version")
-	flag.Parse()
-	if *versionFlag {
-		fmt.Printf("masl version: %s, build: %s\n", version, build)
-		os.Exit(0)
-	}
-
 	usr, err := user.Current()
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	// Create the logger file if doesn't exist. Append to it if it already exists.
+	// 1. Create the logger file if doesn't exist. Append to it if it already exists.
 	var filename = "masl.log"
 	file, err := os.OpenFile(usr.HomeDir+string(os.PathSeparator)+filename,
 		os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
@@ -51,13 +44,16 @@ func main() {
 	logger.Info("------------------ w00t w00t masl for you!?  ------------------")
 	logger.SetLevel(logrus.InfoLevel)
 
-	// Read config file
+	// 2. Read config file
 	conf := masl.GetConfig(logger)
 	if conf.Debug {
 		logger.SetLevel(logrus.DebugLevel)
 	}
 
-	// First, generate a new OneLogin API token
+	// 3. Read the command line flags
+	profileName := parseFlags(conf)
+
+	// Generate a new OneLogin API token
 	apiToken := masl.GenerateToken(conf, logger)
 
 	// Ask for the user's password
@@ -103,11 +99,24 @@ func main() {
 	role := roles[index-1]
 
 	assertionOutput := masl.AssumeRole(samlAssertion, role, logger)
-	masl.SetCredentials(assertionOutput, usr.HomeDir, logger)
+	masl.SetCredentials(assertionOutput, usr.HomeDir, profileName, logger)
 
 	logger.Info("w00t w00t masl for you!, Successfully authenticated.")
 
 	fmt.Println("w00t w00t masl for you!")
 	fmt.Printf("Assumed User: %v\n", *assertionOutput.AssumedRoleUser.Arn)
 	fmt.Printf("Token will expire on: %v\n", *assertionOutput.Credentials.Expiration)
+}
+
+func parseFlags(conf masl.Config) *string {
+	versionFlag := flag.Bool("version", false, "prints MASL version")
+	profileFlag := flag.String("profile", conf.Profile, "AWS profile name")
+
+	flag.Parse()
+
+	if *versionFlag {
+		fmt.Printf("masl version: %s, build: %s\n", version, build)
+		os.Exit(0)
+	}
+	return profileFlag
 }

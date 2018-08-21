@@ -276,7 +276,8 @@ func AssumeRole(samlAssertion string, role *SAMLAssertionRole, log *logrus.Logge
 }
 
 // SetCredentials Apply the STS credentials on the host
-func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir string, log *logrus.Logger) {
+func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir string,
+	profileName *string, log *logrus.Logger) {
 	filename := os.Getenv("AWS_SHARED_CREDENTIALS_FILE")
 	if filename == "" {
 		filename = homeDir + string(os.PathSeparator) + ".aws" +
@@ -295,7 +296,7 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 		log.Info("AWS credentials file loaded.")
 	}
 
-	sec := cfg.Section("masl")
+	sec := cfg.Section(*profileName)
 	sec.NewKey("aws_access_key_id", *assertionOutput.Credentials.AccessKeyId)
 	sec.NewKey("aws_secret_access_key", *assertionOutput.Credentials.SecretAccessKey)
 	sec.NewKey("aws_session_token", *assertionOutput.Credentials.SessionToken)

@@ -18,7 +18,7 @@ Just download the latest release under https://github.com/glnds/masl/releases.
 ### Configuration
 
 All configuration is done using a ```masl.toml``` file in your user's home directory.
-The minimal configuraton should look like this:
+The minimal configuration should look like this:
 ```
 
 BaseURL = 'https://api.eu.onelogin.com/'
@@ -27,26 +27,61 @@ ClientSecret = 'onelogin client secret'
 AppID = 'onelogin app id'
 Subdomain = 'subdomain of the onelogin user'
 Username = 'onelogin username or email'
-Debug = false # Set to true for debug logging
 ```
 
-### Logging
+Optional settings:
+```
+Debug = true/false (Set to true for debug logging, default off)
+Profile = 'AWS Profile name' (default = masl)
+```
 
-A log file ```masl.log``` is created and added on your user's home directory. The default log level is 'INFO'. For debug logging set ```Debug = true``` in ```masl.toml```.
+## Usage
+
+Just run ```masl``` on your command line. 
+
+Optional command line arguments:
+```
+  -profile string
+        AWS profile name (default "xxxx")
+  -version
+        prints MASL version
+```
+
+Assure the environment variable ```AWS_PROFILE``` is set to **masl** (or the overrided value specified in your config file or command line options).
+
+## Development
+
+### Dependency management
+Dependency management is done with ```dep```: https://github.com/golang/dep
+
+After ```git clone``` run ```dep ensure``` to make sure the project's dependencies are in sync.
+
+Please see [Daily Dep](https://golang.github.io/dep/docs/daily-dep.html) for more information about common ```dep``` commands.
+
+### Makefile
+This project includes a ```makefile`` to make your life easy.
+- ```make clean```: clean up your workspace
+- ```make build```: build this project
+- ```make lint```: run [gometalinter](https://github.com/alecthomas/gometalinter)
+
+
+
 
 ## Running the tests
 
 TODO: Explain how to run the automated tests for this system
 
 
-## Usage
 
-Just run ```masl``` on your command line.
 
 ## Built With
 
 * [Snyk](https://snyk.io/) - Continuously vulnerabilities scanning
 * [dep](https://golang.github.io/dep/) - Dependency Management for Go
+
+### Logging
+
+A log file ```masl.log``` is created and added on your user's home directory. The default log level is 'INFO'. For debug logging set ```Debug = true``` in ```masl.toml```.
 
 ## Contributing
 

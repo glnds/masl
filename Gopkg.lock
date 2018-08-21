@@ -44,8 +44,14 @@
     "private/protocol/xml/xmlutil",
     "service/sts"
   ]
-  revision = "f831d5a0822a1ad72420ab18c6269bca1ddaf490"
-  version = "v1.15.11"
+  revision = "2d51b5082ad9f540e68761c27522b0677b9a75c0"
+  version = "v1.15.13"
+
+[[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
@@ -71,6 +77,18 @@
   revision = "0b12d6b5"
 
 [[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
@@ -83,7 +101,7 @@
     "unix",
     "windows"
   ]
-  revision = "4e1fef5609515ec7a2cee7b5de30ba6d9b438cbf"
+  revision = "1c9583448a9c3aa0f9a6a5241bf73c0bd8aafded"
 
 [[projects]]
   name = "gopkg.in/ini.v1"
@@ -94,6 +112,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "99c9d995bf66ca1e9e2c421eaf5dc50edf9abf0ad921c35798e195a579e3e2b6"
+  inputs-digest = "3b722d9a02acbdfe31586849a363f25e1aa4bb163f49321ae7a6f651bef5c719"
   solver-name = "gps-cdcl"
   solver-version = 1

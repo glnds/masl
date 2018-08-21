@@ -17,6 +17,7 @@ type Config struct {
 	AppID        string
 	Subdomain    string
 	Username     string
+	Profile      string
 	Debug        bool
 	Accounts     []struct {
 		ID   string
@@ -33,7 +34,7 @@ func GetConfig(logger *logrus.Logger) Config {
 	}
 
 	// Read masl.toml config file for initialization
-	var conf Config
+	conf := Config{Profile: "masl", Debug: false} // Set default values
 	if _, err := toml.DecodeFile(usr.HomeDir+string(os.PathSeparator)+"masl.toml", &conf); err != nil {
 		log.Fatal(err.Error())
 	}
@@ -45,6 +46,7 @@ func GetConfig(logger *logrus.Logger) Config {
 		"appID":        conf.AppID,
 		"subdomain":    conf.Subdomain,
 		"username":     conf.Username,
+		"profile":      conf.Profile,
 		"debug":        conf.Debug,
 		"#accounts":    len(conf.Accounts),
 	}).Info("Config settings")
