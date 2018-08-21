@@ -205,7 +205,6 @@ func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp stri
 func ParseSAMLAssertion(conf Config, samlAssertion string) []*SAMLAssertionRole {
 
 	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
-	fmt.Printf("%v\n", string(sDec[:]))
 
 	var samlResponse Response
 	xml.Unmarshal(sDec, &samlResponse)
@@ -270,6 +269,7 @@ func AssumeRole(samlAssertion string, role *SAMLAssertionRole, log *logrus.Logge
 
 	output, err := stsClient.AssumeRoleWithSAML(&input)
 	if err != nil {
+		fmt.Println(err.Error())
 		log.Fatal(err)
 	}
 	return output
