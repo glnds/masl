@@ -1,9 +1,13 @@
-# Binaries for programs and plugins
+# Ignore Binaries for programs and plugins
+*
+!*.*
+!*/
+
 *.exe
 *.dll
 *.so
 *.dylib
-masl
+.DS_Store
 
 # Test binary, build with `go test -c`
 *.test
