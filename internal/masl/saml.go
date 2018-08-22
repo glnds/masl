@@ -239,33 +239,13 @@ func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, envDetails [
 	return roles
 }
 
-func httpRequest(url string, auth string, jsonStr []byte, log *logrus.Logger, target interface{}) {
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-	if err != nil {
-		panic(err)
-	}
-	req.Header.Set("Authorization", auth)
-	req.Header.Set("Content-Type", "application/json")
-	logRequest(log, req)
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
-
-	logResponse(log, resp)
-
-	json.NewDecoder(resp.Body).Decode(target)
-}
-
 // AssumeRole assume a role on AWS
-func AssumeRole(samlAssertion string, role *SAMLAssertionRole, log *logrus.Logger) *sts.AssumeRoleWithSAMLOutput {
+func AssumeRole(samlAssertion string, duration int64, role *SAMLAssertionRole,
+	log *logrus.Logger) *sts.AssumeRoleWithSAMLOutput {
+
 	session := session.Must(session.NewSession())
 	stsClient := sts.New(session)
 
-	duration := int64(28800)
 	input := sts.AssumeRoleWithSAMLInput{
 		DurationSeconds: &duration,
 		PrincipalArn:    &role.PrincipalArn,
@@ -319,4 +299,25 @@ func Contains(anArray []string, aString string) bool {
 		}
 	}
 	return false
+}
+
+func httpRequest(url string, auth string, jsonStr []byte, log *logrus.Logger, target interface{}) {
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Authorization", auth)
+	req.Header.Set("Content-Type", "application/json")
+	logRequest(log, req)
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	logResponse(log, resp)
+
+	json.NewDecoder(resp.Body).Decode(target)
 }

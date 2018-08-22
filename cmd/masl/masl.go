@@ -102,7 +102,7 @@ func main() {
 	}
 	role := roles[index-1]
 
-	assertionOutput := masl.AssumeRole(samlAssertion, role, logger)
+	assertionOutput := masl.AssumeRole(samlAssertion, int64(conf.Duration), role, logger)
 	masl.SetCredentials(assertionOutput, usr.HomeDir, profileName, logger)
 
 	logger.Info("w00t w00t masl for you!, Successfully authenticated.")

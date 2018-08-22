@@ -31,8 +31,9 @@ Username = 'onelogin username or email'
 
 Optional settings:
 ```
+Duration = 'Assume role maximum session duration' (default 3600) 
 Debug = true/false (Set to true for debug logging, default off)
-Profile = 'AWS Profile name' (default = masl)
+Profile = 'AWS Profile name' (default = 'masl')
 ```
 
 #### Multi-Account management
