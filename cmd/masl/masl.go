@@ -125,5 +125,3 @@ func parseFlags(conf masl.Config) (*string, *string) {
 	}
 	return profileFlag, envFlag
 }
-
-
