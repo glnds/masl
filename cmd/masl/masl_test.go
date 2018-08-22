@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // var theflag string
@@ -19,5 +20,4 @@ func TestParseFlags(t *testing.T) {
 	// parseFlags(conf)
 	// assert equality
 	assert.Equal(t, 123, 123, "they should be equal")
-
 }
