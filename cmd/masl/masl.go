@@ -51,7 +51,11 @@ func main() {
 	}
 
 	// 3. Read the command line flags
-	profileName := parseFlags(conf)
+	profileName, env := parseFlags(conf)
+	var envDetails []string
+	if env != nil {
+		envDetails = masl.GetEnvironmentDetails(conf, env)
+	}
 
 	// Generate a new OneLogin API token
 	apiToken := masl.GenerateToken(conf, logger)
@@ -80,13 +84,13 @@ func main() {
 	}
 
 	// Print all SAMLAssertion Roles
-	roles := masl.ParseSAMLAssertion(conf, samlAssertion)
+	roles := masl.ParseSAMLAssertion(samlAssertion, conf.Accounts, envDetails)
 	for index, role := range roles {
 		role.ID = index + 1
 		fmt.Printf("[%2d] > %s:%-15s :: %s\n", role.ID, role.AccountID, role.RoleArn[31:], role.AccountName)
 	}
 
-	// Ask for a new otp
+	// Choose a role
 	fmt.Print("Enter a role number:")
 	reader = bufio.NewReader(os.Stdin)
 	roleNumber, _ := reader.ReadString('\n')
@@ -108,9 +112,10 @@ func main() {
 	fmt.Printf("Token will expire on: %v\n", *assertionOutput.Credentials.Expiration)
 }
 
-func parseFlags(conf masl.Config) *string {
+func parseFlags(conf masl.Config) (*string, *string) {
 	versionFlag := flag.Bool("version", false, "prints MASL version")
 	profileFlag := flag.String("profile", conf.Profile, "AWS profile name")
+	envFlag := flag.String("env", conf.Profile, "Work environment")
 
 	flag.Parse()
 
@@ -118,5 +123,7 @@ func parseFlags(conf masl.Config) *string {
 		fmt.Printf("masl version: %s, build: %s\n", version, build)
 		os.Exit(0)
 	}
-	return profileFlag
+	return profileFlag, envFlag
 }
+
+

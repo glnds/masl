@@ -106,11 +106,12 @@ type VerifyMFAResponse struct {
 
 // SAMLAssertionRole represents a Role which could be assumed on AWS
 type SAMLAssertionRole struct {
-	ID           int
-	PrincipalArn string
-	RoleArn      string
-	AccountID    string
-	AccountName  string
+	ID                     int
+	PrincipalArn           string
+	RoleArn                string
+	AccountID              string
+	AccountName            string
+	EnvironmentIndependent bool
 }
 
 // RolesByName roles sorted by account name
@@ -202,7 +203,7 @@ func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp stri
 }
 
 // ParseSAMLAssertion parse the SAMLAssertion response data into a list of SAMLAssertionRoles
-func ParseSAMLAssertion(conf Config, samlAssertion string) []*SAMLAssertionRole {
+func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, envDetails []string) []*SAMLAssertionRole {
 
 	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
 
@@ -224,9 +225,13 @@ func ParseSAMLAssertion(conf Config, samlAssertion string) []*SAMLAssertionRole 
 				role.RoleArn = data[0]
 				role.PrincipalArn = data[1]
 				role.AccountID = data[1][13:25]
-				role.AccountName = SearchAccounts(conf, role.AccountID)
+				role.AccountName, role.EnvironmentIndependent = SearchAccounts(accountInfo, role.AccountID)
 
-				roles = append(roles, role)
+				// Based on context, are we interested in this role?
+				if envDetails == nil || role.EnvironmentIndependent ||
+					(envDetails != nil && Contains(envDetails, role.AccountID)) {
+					roles = append(roles, role)
+				}
 			}
 		}
 	}
@@ -304,4 +309,14 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+// Contains test if an array contains a string
+func Contains(anArray []string, aString string) bool {
+	for _, value := range anArray {
+		if aString == value {
+			return true
+		}
+	}
+	return false
 }

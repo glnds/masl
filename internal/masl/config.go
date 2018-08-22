@@ -9,20 +9,28 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
+// Accounts represents the accounts section of the masl config file
+type Accounts []struct {
+	ID                     string `toml:"ID"`
+	Name                   string `toml:"Name"`
+	EnvironmentIndependent bool   `toml:"EnvironmentIndependent"`
+}
+
 // Config represents the masl config file
 type Config struct {
-	BaseURL      string
-	ClientID     string
-	ClientSecret string
-	AppID        string
-	Subdomain    string
-	Username     string
-	Profile      string
-	Debug        bool
-	Accounts     []struct {
-		ID   string
-		Name string
-	}
+	BaseURL      string `toml:"BaseURL"`
+	ClientID     string `toml:"ClientID"`
+	ClientSecret string `toml:"ClientSecret"`
+	AppID        string `toml:"AppID"`
+	Subdomain    string `toml:"Subdomain"`
+	Username     string `toml:"Username"`
+	Profile      string `toml:"Profile"`
+	Debug        bool   `toml:"Debug"`
+	Environments []struct {
+		Name     string   `toml:"Name"`
+		Accounts []string `toml:"Accounts"`
+	} `toml:"Environments"`
+	Accounts Accounts `toml:"Accounts"`
 }
 
 // GetConfig reads the masl.toml configuration file for initialization.
@@ -40,27 +48,38 @@ func GetConfig(logger *logrus.Logger) Config {
 	}
 
 	logger.WithFields(logrus.Fields{
-		"baseURL":      conf.BaseURL,
-		"clientID":     conf.ClientID,
-		"clientSecret": conf.ClientSecret,
-		"appID":        conf.AppID,
-		"subdomain":    conf.Subdomain,
-		"username":     conf.Username,
-		"profile":      conf.Profile,
-		"debug":        conf.Debug,
-		"#accounts":    len(conf.Accounts),
+		"baseURL":       conf.BaseURL,
+		"clientID":      conf.ClientID,
+		"clientSecret":  conf.ClientSecret,
+		"appID":         conf.AppID,
+		"subdomain":     conf.Subdomain,
+		"username":      conf.Username,
+		"profile":       conf.Profile,
+		"debug":         conf.Debug,
+		"#environments": len(conf.Environments),
+		"#accounts":     len(conf.Accounts),
 	}).Info("Config settings")
 
 	return conf
 }
 
 // SearchAccounts search an account name for a given acount id
-func SearchAccounts(conf Config, accountID string) string {
+func SearchAccounts(accountInfo Accounts, accountID string) (string, bool) {
 
-	for _, account := range conf.Accounts {
+	for _, account := range accountInfo {
 		if account.ID == accountID {
-			return account.Name
+			return account.Name, account.EnvironmentIndependent
 		}
 	}
-	return ""
+	return "", false
+}
+
+// GetEnvironmentDetails search an environment's detail for a given environment name
+func GetEnvironmentDetails(conf Config, environment *string) []string {
+	for _, env := range conf.Environments {
+		if env.Name == *environment {
+			return env.Accounts
+		}
+	}
+	return nil
 }
