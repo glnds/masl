@@ -203,7 +203,8 @@ func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp stri
 }
 
 // ParseSAMLAssertion parse the SAMLAssertion response data into a list of SAMLAssertionRoles
-func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, envDetails []string) []*SAMLAssertionRole {
+func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, account *string,
+	envDetails []string) []*SAMLAssertionRole {
 
 	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
 
@@ -228,8 +229,15 @@ func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, envDetails [
 				role.AccountName, role.EnvironmentIndependent = SearchAccounts(accountInfo, role.AccountID)
 
 				// Based on context, are we interested in this role?
-				if envDetails == nil || role.EnvironmentIndependent ||
+				if *account != "" {
+					if strings.EqualFold(*account, role.AccountID) ||
+						strings.EqualFold(*account, role.AccountName) {
+
+						roles = append(roles, role)
+					}
+				} else if envDetails == nil || role.EnvironmentIndependent ||
 					(envDetails != nil && Contains(envDetails, role.AccountID)) {
+
 					roles = append(roles, role)
 				}
 			}

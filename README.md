@@ -33,7 +33,7 @@ Optional settings:
 ```
 Duration = 'Assume role maximum session duration' (default 3600) 
 Debug = true/false (Set to true for debug logging, default off)
-Profile = 'AWS Profile name' (default = 'masl')
+Profile = 'Value for environment variable AWS_PROFILE' (default = 'masl')
 ```
 
 #### Multi-Account management
@@ -88,6 +88,8 @@ Just run ```masl``` on your command line.
 
 Optional command line arguments:
 ```
+  -account string
+        AWS Account ID or name
   -env string
         Work environment
   -profile string
@@ -96,7 +98,7 @@ Optional command line arguments:
         prints MASL version
 ```
 
-Assure the environment variable ```AWS_PROFILE``` is set to **masl** (or the overrided value specified in your config file or command line options).
+Assure the environment variable ```AWS_PROFILE``` is set to **masl** (or the overrided value specified in ```masl.toml``` or the ```-profile``` command line optiont).
 
 ## Development
 

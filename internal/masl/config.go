@@ -26,6 +26,7 @@ type Config struct {
 	Username     string `toml:"Username"`
 	Duration     int    `toml:"Duration"`
 	Profile      string `toml:"Profile"`
+	DefaultRole  string `toml:"DefaultRole"`
 	Debug        bool   `toml:"Debug"`
 	Environments []struct {
 		Name     string   `toml:"Name"`

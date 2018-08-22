@@ -51,7 +51,7 @@ func main() {
 	}
 
 	// 3. Read the command line flags
-	profileName, env := parseFlags(conf)
+	profileName, env, account := parseFlags(conf)
 	var envDetails []string
 	if env != nil {
 		envDetails = masl.GetEnvironmentDetails(conf, env)
@@ -84,7 +84,7 @@ func main() {
 	}
 
 	// Print all SAMLAssertion Roles
-	roles := masl.ParseSAMLAssertion(samlAssertion, conf.Accounts, envDetails)
+	roles := masl.ParseSAMLAssertion(samlAssertion, conf.Accounts, account, envDetails)
 	for index, role := range roles {
 		role.ID = index + 1
 		fmt.Printf("[%2d] > %s:%-15s :: %s\n", role.ID, role.AccountID, role.RoleArn[31:], role.AccountName)
@@ -107,15 +107,17 @@ func main() {
 
 	logger.Info("w00t w00t masl for you!, Successfully authenticated.")
 
-	fmt.Println("w00t w00t masl for you!")
+	fmt.Println("\nw00t w00t masl for you!")
 	fmt.Printf("Assumed User: %v\n", *assertionOutput.AssumedRoleUser.Arn)
+	fmt.Printf("In account: %v [%v]\n", role.AccountID, role.AccountName)
 	fmt.Printf("Token will expire on: %v\n", *assertionOutput.Credentials.Expiration)
 }
 
-func parseFlags(conf masl.Config) (*string, *string) {
+func parseFlags(conf masl.Config) (*string, *string, *string) {
 	versionFlag := flag.Bool("version", false, "prints MASL version")
 	profileFlag := flag.String("profile", conf.Profile, "AWS profile name")
 	envFlag := flag.String("env", "", "Work environment")
+	accountFlag := flag.String("account", "", "AWS Account ID or name")
 
 	flag.Parse()
 
@@ -123,5 +125,5 @@ func parseFlags(conf masl.Config) (*string, *string) {
 		fmt.Printf("masl version: %s, build: %s\n", version, build)
 		os.Exit(0)
 	}
-	return profileFlag, envFlag
+	return profileFlag, envFlag, accountFlag
 }
