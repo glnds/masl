@@ -35,12 +35,60 @@ Debug = true/false (Set to true for debug logging, default off)
 Profile = 'AWS Profile name' (default = masl)
 ```
 
+#### Multi-Account management
+One of the main drivers to develop another Onelogin CLI authenticator was to ease the management of multiple AWS accounts. Most of the tools currently lack those features and that makes switching AWS accounts bothersome. For this purpose ```masl.toml``` supports the following features:
+
+##### Account naming
+You can provide account names (aliases) for all accounts you have access to:
+```
+...
+[[Accounts]]
+ID = '1234567890'
+Name = 'account-x'
+
+[[Accounts]]
+ID = '1122334455'
+Name = 'account-y'
+
+[[Accounts]]
+ID = '0987654321'
+Name = 'account-z'
+...
+```
+
+##### Environments containing account subsets
+If your account list grows too big it is often handy to limit the list to your current work context. This can be achieved by defining environments:
+
+```
+...
+[[Environments]]
+Name = 'governance'
+Accounts = ['1234567890', '1122334455']
+...
+```
+
+Furthermore accounts can be marked as 'Environment Independent`, in that case they will show up in all your environments.
+
+```
+...
+[[Accounts]]
+ID = '1234567890'
+Name = 'base-account'
+EnvironmentIndependent = true
+...
+````
+
+usage: ```masl -env [environment_name]```
+
+
 ## Usage
 
 Just run ```masl``` on your command line. 
 
 Optional command line arguments:
 ```
+  -env string
+        Work environment
   -profile string
         AWS profile name (default "xxxx")
   -version

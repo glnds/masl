@@ -115,7 +115,7 @@ func main() {
 func parseFlags(conf masl.Config) (*string, *string) {
 	versionFlag := flag.Bool("version", false, "prints MASL version")
 	profileFlag := flag.String("profile", conf.Profile, "AWS profile name")
-	envFlag := flag.String("env", conf.Profile, "Work environment")
+	envFlag := flag.String("env", "", "Work environment")
 
 	flag.Parse()
 
