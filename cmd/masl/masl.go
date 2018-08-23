@@ -19,6 +19,15 @@ var logger = logrus.New()
 
 var version, build string
 
+// CLIFlags represents the commmand line flags
+type CLIFlags struct {
+	Version bool
+	Profile string
+	Env     string
+	Account string
+	Role    string
+}
+
 func main() {
 
 	usr, err := user.Current()
@@ -51,11 +60,25 @@ func main() {
 	}
 
 	// 3. Read the command line flags
-	profileName, env, account := parseFlags(conf)
-	var envDetails []string
-	if env != nil {
-		envDetails = masl.GetEnvironmentDetails(conf, env)
+	flags := parseFlags(conf)
+	logger.WithFields(logrus.Fields{
+		"flags": flags,
+	}).Info("Parsed the commandline flags")
+
+	var accountFilter []string
+	if flags.Account != "" {
+		account := masl.GetAccountID(conf, flags.Account)
+		if account != "" {
+			accountFilter = append(accountFilter, account)
+		} else {
+			accountFilter = append(accountFilter, flags.Account)
+		}
+	} else if flags.Env != "" {
+		accountFilter = append(accountFilter, masl.GetAccountsForEnvironment(conf, flags.Env)...)
 	}
+	logger.WithFields(logrus.Fields{
+		"accountFilter": accountFilter,
+	}).Info("Initialized the account filter")
 
 	// Generate a new OneLogin API token
 	apiToken := masl.GenerateToken(conf, logger)
@@ -71,20 +94,25 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	// Ask for a new otp
-	fmt.Print("OneLogin Protect Token: ")
 	reader := bufio.NewReader(os.Stdin)
-	otp, _ := reader.ReadString('\n')
 
-	// OneLogin Verify MFA API call
-	samlAssertion, err := masl.VerifyMFA(conf, logger, samlAssertionData, otp, apiToken)
-	if err != nil {
-		fmt.Println(err)
-		logger.Fatal(err)
+	var samlData string
+	if samlAssertionData.MFARequired {
+		// Ask for a new otp
+		fmt.Print("OneLogin Protect Token: ")
+		otp, _ := reader.ReadString('\n')
+		samlData, err = masl.VerifyMFA(conf, logger, samlAssertionData, otp, apiToken)
+		// OneLogin Verify MFA API call
+		if err != nil {
+			fmt.Println(err)
+			logger.Fatal(err)
+		}
+	} else {
+		samlData = samlAssertionData.Data
 	}
 
 	// Print all SAMLAssertion Roles
-	roles := masl.ParseSAMLAssertion(samlAssertion, conf.Accounts, account, envDetails)
+	roles := masl.ParseSAMLAssertion(samlData, conf.Accounts, accountFilter)
 	for index, role := range roles {
 		role.ID = index + 1
 		fmt.Printf("[%2d] > %s:%-15s :: %s\n", role.ID, role.AccountID, role.RoleArn[31:], role.AccountName)
@@ -102,8 +130,8 @@ func main() {
 	}
 	role := roles[index-1]
 
-	assertionOutput := masl.AssumeRole(samlAssertion, int64(conf.Duration), role, logger)
-	masl.SetCredentials(assertionOutput, usr.HomeDir, profileName, logger)
+	assertionOutput := masl.AssumeRole(samlData, int64(conf.Duration), role, logger)
+	masl.SetCredentials(assertionOutput, usr.HomeDir, flags.Profile, logger)
 
 	logger.Info("w00t w00t masl for you!, Successfully authenticated.")
 
@@ -113,17 +141,20 @@ func main() {
 	fmt.Printf("Token will expire on: %v\n", *assertionOutput.Credentials.Expiration)
 }
 
-func parseFlags(conf masl.Config) (*string, *string, *string) {
-	versionFlag := flag.Bool("version", false, "prints MASL version")
-	profileFlag := flag.String("profile", conf.Profile, "AWS profile name")
-	envFlag := flag.String("env", "", "Work environment")
-	accountFlag := flag.String("account", "", "AWS Account ID or name")
+func parseFlags(conf masl.Config) CLIFlags {
+	flags := new(CLIFlags)
+
+	flag.BoolVar(&flags.Version, "version", false, "prints MASL version")
+	flag.StringVar(&flags.Profile, "profile", conf.Profile, "AWS profile name")
+	flag.StringVar(&flags.Env, "env", "", "Work environment")
+	flag.StringVar(&flags.Account, "account", "", "AWS Account ID or name")
+	flag.StringVar(&flags.Role, "role", "", "OneLogin role name")
 
 	flag.Parse()
 
-	if *versionFlag {
+	if flags.Version {
 		fmt.Printf("masl version: %s, build: %s\n", version, build)
 		os.Exit(0)
 	}
-	return profileFlag, envFlag, accountFlag
+	return *flags
 }

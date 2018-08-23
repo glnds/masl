@@ -7,6 +7,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"os"
@@ -55,7 +56,18 @@ type SAMLAssertionRequest struct {
 }
 
 // SAMLAssertionResponse represents the OneLogin SAML Assertion response
-type SAMLAssertionResponse struct {
+type samlAssertionResponse struct {
+	Status struct {
+		Type    string `json:"type"`
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+		Error   bool   `json:"error"`
+	} `json:"status"`
+	Data string `json:"data"`
+}
+
+// SAMLAssertionResponseMFA represents the OneLogin SAML Assertion response with MFA required
+type samlAssertionResponseMFA struct {
 	Status struct {
 		Type    string `json:"type"`
 		Code    int    `json:"code"`
@@ -79,10 +91,12 @@ type SAMLAssertionResponse struct {
 	} `json:"data"`
 }
 
-// SAMLAssertionData internal SAMLAssertionResponse representation
+// SAMLAssertionData internal Generic SAMLAssertion response representation
 type SAMLAssertionData struct {
-	StateToken string
-	DeviceID   int
+	MFARequired bool
+	DeviceID    int
+	StateToken  string
+	Data        string
 }
 
 // VerifyMFARequest represents the OneLogin Verify MFA request
@@ -163,18 +177,46 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 	}
 	auth := "bearer:" + apiToken
 
-	samlAssertion := SAMLAssertionResponse{}
-	httpRequest(url, auth, requestBody, log, &samlAssertion)
-
-	var data SAMLAssertionData
-	if samlAssertion.Status.Code == 200 {
-		//TODO: MFA-less authentication is not yet implemented
-		data = SAMLAssertionData{
-			samlAssertion.Data[0].StateToken,
-			samlAssertion.Data[0].Devices[0].DeviceID}
-		return data, nil
+	// Parse the raw body to determine if MFA is required
+	body := httpRequestRaw(url, auth, requestBody, log)
+	var rawData map[string]interface{}
+	if err := json.Unmarshal(body, &rawData); err != nil {
+		log.Fatalln(err)
 	}
-	return data, errors.New(samlAssertion.Status.Message)
+	status := rawData["status"].(map[string]interface{})
+	message := status["message"].(string)
+	log.Info(message)
+
+	var samlData SAMLAssertionData
+	var samlErr error
+
+	code := int(status["code"].(float64))
+	if code == 200 {
+		if strings.EqualFold(message, "success") {
+			// MFA NOT Required
+			log.Info("MFA not required")
+			assertionResponse := samlAssertionResponse{}
+			json.Unmarshal(body, &assertionResponse)
+
+			samlData = SAMLAssertionData{
+				MFARequired: false,
+				Data:        assertionResponse.Data,
+			}
+		} else {
+			// MFA token is required
+			assertionResponse := samlAssertionResponseMFA{}
+			json.Unmarshal(body, &assertionResponse)
+
+			samlData = SAMLAssertionData{
+				MFARequired: true,
+				DeviceID:    assertionResponse.Data[0].Devices[0].DeviceID,
+				StateToken:  assertionResponse.Data[0].StateToken,
+			}
+		}
+	} else {
+		samlErr = errors.New(message)
+	}
+	return samlData, samlErr
 }
 
 // VerifyMFA Call to https://api.eu.onelogin.com/api/1/saml_assertion/verify_factor
@@ -195,16 +237,20 @@ func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp stri
 	mfaResponse := VerifyMFAResponse{}
 	httpRequest(url, auth, requestBody, log, &mfaResponse)
 
+	var samlData string
+	var samlErr error
+
 	if mfaResponse.Status.Code == 200 {
-		return mfaResponse.Data, nil
+		samlData = mfaResponse.Data
+	} else {
+		samlErr = errors.New(mfaResponse.Status.Message)
 	}
 
-	return "", errors.New(mfaResponse.Status.Message)
+	return samlData, samlErr
 }
 
 // ParseSAMLAssertion parse the SAMLAssertion response data into a list of SAMLAssertionRoles
-func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, account *string,
-	envDetails []string) []*SAMLAssertionRole {
+func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, accountFilter []string) []*SAMLAssertionRole {
 
 	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
 
@@ -215,6 +261,7 @@ func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, account *str
 
 	roles := []*SAMLAssertionRole{}
 
+	//TODO: for loop https://stackoverflow.com/questions/7782411/is-there-a-foreach-loop-in-go
 	for i := 0; i < len(attributes); i++ {
 		values := attributes[i].Values
 		for j := 0; j < len(values); j++ {
@@ -229,15 +276,9 @@ func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, account *str
 				role.AccountName, role.EnvironmentIndependent = SearchAccounts(accountInfo, role.AccountID)
 
 				// Based on context, are we interested in this role?
-				if *account != "" {
-					if strings.EqualFold(*account, role.AccountID) ||
-						strings.EqualFold(*account, role.AccountName) {
-
-						roles = append(roles, role)
-					}
-				} else if envDetails == nil || role.EnvironmentIndependent ||
-					(envDetails != nil && Contains(envDetails, role.AccountID)) {
-
+				if accountFilter == nil {
+					roles = append(roles, role)
+				} else if Contains(accountFilter, role.AccountID) {
 					roles = append(roles, role)
 				}
 			}
@@ -270,7 +311,7 @@ func AssumeRole(samlAssertion string, duration int64, role *SAMLAssertionRole,
 
 // SetCredentials Apply the STS credentials on the host
 func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir string,
-	profileName *string, log *logrus.Logger) {
+	profileName string, log *logrus.Logger) {
 	filename := os.Getenv("AWS_SHARED_CREDENTIALS_FILE")
 	if filename == "" {
 		filename = homeDir + string(os.PathSeparator) + ".aws" +
@@ -289,7 +330,7 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 		log.Info("AWS credentials file loaded.")
 	}
 
-	sec := cfg.Section(*profileName)
+	sec := cfg.Section(profileName)
 	sec.NewKey("aws_access_key_id", *assertionOutput.Credentials.AccessKeyId)
 	sec.NewKey("aws_secret_access_key", *assertionOutput.Credentials.SecretAccessKey)
 	sec.NewKey("aws_session_token", *assertionOutput.Credentials.SessionToken)
@@ -328,4 +369,29 @@ func httpRequest(url string, auth string, jsonStr []byte, log *logrus.Logger, ta
 	logResponse(log, resp)
 
 	json.NewDecoder(resp.Body).Decode(target)
+}
+
+func httpRequestRaw(url string, auth string, jsonStr []byte, log *logrus.Logger) []byte {
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Authorization", auth)
+	req.Header.Set("Content-Type", "application/json")
+	logRequest(log, req)
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	logResponse(log, resp)
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return body
 }

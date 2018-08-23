@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/Sirupsen/logrus"
@@ -77,12 +78,30 @@ func SearchAccounts(accountInfo Accounts, accountID string) (string, bool) {
 	return "", false
 }
 
-// GetEnvironmentDetails search an environment's detail for a given environment name
-func GetEnvironmentDetails(conf Config, environment *string) []string {
-	for _, env := range conf.Environments {
-		if env.Name == *environment {
-			return env.Accounts
+// GetAccountID get the account id for a given acount name (alias)
+func GetAccountID(conf Config, name string) string {
+	var id string
+	for _, account := range conf.Accounts {
+		if strings.EqualFold(account.Name, name) {
+			id = account.ID
 		}
 	}
-	return nil
+	return id
+}
+
+// GetAccountsForEnvironment search an environment's detail for a given environment name
+func GetAccountsForEnvironment(conf Config, environment string) []string {
+	var accounts []string
+	for _, env := range conf.Environments {
+		if strings.EqualFold(env.Name, environment) {
+			accounts = append(accounts, env.Accounts...)
+			break
+		}
+	}
+	for _, account := range conf.Accounts {
+		if account.EnvironmentIndependent {
+			accounts = append(accounts, account.ID)
+		}
+	}
+	return accounts
 }
