@@ -19,7 +19,7 @@ var logger = logrus.New()
 
 var version, build string
 
-// CLIFlags represents the commmand line flags
+// CLIFlags represents the command line flags
 type CLIFlags struct {
 	Version bool
 	Profile string
@@ -65,20 +65,7 @@ func main() {
 		"flags": flags,
 	}).Info("Parsed the commandline flags")
 
-	var accountFilter []string
-	if flags.Account != "" {
-		account := masl.GetAccountID(conf, flags.Account)
-		if account != "" {
-			accountFilter = append(accountFilter, account)
-		} else {
-			accountFilter = append(accountFilter, flags.Account)
-		}
-	} else if flags.Env != "" {
-		accountFilter = append(accountFilter, masl.GetAccountsForEnvironment(conf, flags.Env)...)
-	}
-	logger.WithFields(logrus.Fields{
-		"accountFilter": accountFilter,
-	}).Info("Initialized the account filter")
+	accountFilter := initAccountFilter(conf, flags, logger)
 
 	// Generate a new OneLogin API token
 	apiToken := masl.GenerateToken(conf, logger)
@@ -157,4 +144,24 @@ func parseFlags(conf masl.Config) CLIFlags {
 		os.Exit(0)
 	}
 	return *flags
+}
+
+func initAccountFilter(conf masl.Config, flags CLIFlags, log *logrus.Logger) []string {
+
+	var accountFilter []string
+	if flags.Account != "" {
+		account := masl.GetAccountID(conf, flags.Account)
+		if account != "" {
+			accountFilter = append(accountFilter, account)
+		} else {
+			accountFilter = append(accountFilter, flags.Account)
+		}
+	} else if flags.Env != "" {
+		accountFilter = append(accountFilter, masl.GetAccountsForEnvironment(conf, flags.Env)...)
+	}
+	log.WithFields(logrus.Fields{
+		"accountFilter": accountFilter,
+	}).Info("Initialized the account filter")
+
+	return accountFilter
 }
