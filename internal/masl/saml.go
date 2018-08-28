@@ -250,7 +250,8 @@ func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp stri
 }
 
 // ParseSAMLAssertion parse the SAMLAssertion response data into a list of SAMLAssertionRoles
-func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, accountFilter []string) []*SAMLAssertionRole {
+func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, accountFilter []string,
+	role string) []*SAMLAssertionRole {
 
 	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
 
@@ -261,25 +262,27 @@ func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, accountFilte
 
 	roles := []*SAMLAssertionRole{}
 
-	//TODO: for loop https://stackoverflow.com/questions/7782411/is-there-a-foreach-loop-in-go
-	for i := 0; i < len(attributes); i++ {
-		values := attributes[i].Values
-		for j := 0; j < len(values); j++ {
-			if strings.Contains(values[j].Value, "role") {
+	for _, attribute := range attributes {
+		for _, value := range attribute.Values {
+			if strings.Contains(value.Value, "role") {
 
-				data := strings.Split(values[j].Value, ",")
+				data := strings.Split(value.Value, ",")
 
-				role := new(SAMLAssertionRole)
-				role.RoleArn = data[0]
-				role.PrincipalArn = data[1]
-				role.AccountID = data[1][13:25]
-				role.AccountName, role.EnvironmentIndependent = SearchAccounts(accountInfo, role.AccountID)
+				assertionRole := SAMLAssertionRole{
+					RoleArn:      data[0],
+					PrincipalArn: data[1],
+					AccountID:    data[1][13:25],
+				}
+				assertionRole.AccountName, assertionRole.EnvironmentIndependent =
+					SearchAccounts(accountInfo, assertionRole.AccountID)
 
 				// Based on context, are we interested in this role?
-				if accountFilter == nil {
-					roles = append(roles, role)
-				} else if Contains(accountFilter, role.AccountID) {
-					roles = append(roles, role)
+				if role == "" || strings.EqualFold(role, assertionRole.RoleArn[31:]) {
+					if accountFilter == nil {
+						roles = append(roles, &assertionRole)
+					} else if Contains(accountFilter, assertionRole.AccountID) {
+						roles = append(roles, &assertionRole)
+					}
 				}
 			}
 		}

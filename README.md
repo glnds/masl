@@ -31,10 +31,13 @@ Username = 'onelogin username or email'
 
 Optional settings:
 ```
-Duration = 'Assume role maximum session duration' (default 3600) 
+Duration = 'Assume role maximum session duration' (default 3600)
 Debug = true/false (Set to true for debug logging, default off)
 Profile = 'Value for environment variable AWS_PROFILE' (default = 'masl')
 ```
+
+If specifying a custom duration assure this duration is allowed on the AWS role itself as well. 
+See: [Enable Federated API Access to your AWS Resources for up to 12 hours Using IAM Roles](https://aws.amazon.com/blogs/security/enable-federated-api-access-to-your-aws-resources-for-up-to-12-hours-using-iam-roles/)
 
 #### Multi-Account management
 One of the main drivers to develop another Onelogin CLI authenticator was to ease the management of multiple AWS accounts. Most of the tools currently lack those features and that makes switching AWS accounts bothersome. For this purpose ```masl.toml``` supports the following features:
@@ -93,7 +96,9 @@ Optional command line arguments:
   -env string
         Work environment
   -profile string
-        AWS profile name (default "xxxx")
+        AWS profile name (default "masl")
+  -role string
+        AWS role name
   -version
         prints MASL version
 ```

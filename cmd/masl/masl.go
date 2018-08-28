@@ -99,23 +99,12 @@ func main() {
 	}
 
 	// Print all SAMLAssertion Roles
-	roles := masl.ParseSAMLAssertion(samlData, conf.Accounts, accountFilter)
-	for index, role := range roles {
-		role.ID = index + 1
-		fmt.Printf("[%2d] > %s:%-15s :: %s\n", role.ID, role.AccountID, role.RoleArn[31:], role.AccountName)
+	roles := masl.ParseSAMLAssertion(samlData, conf.Accounts, accountFilter, flags.Role)
+	if len(roles) == 0 {
+		fmt.Println("No  masl for you! You don't have permissions to any account!")
+		os.Exit(0)
 	}
-
-	// Choose a role
-	fmt.Print("Enter a role number:")
-	reader = bufio.NewReader(os.Stdin)
-	roleNumber, _ := reader.ReadString('\n')
-	roleNumber = strings.TrimRight(roleNumber, "\r\n")
-	index, err := strconv.Atoi(roleNumber)
-	if err != nil {
-		fmt.Println(err)
-		logger.Fatal(err)
-	}
-	role := roles[index-1]
+	role := selectRole(roles)
 
 	assertionOutput := masl.AssumeRole(samlData, int64(conf.Duration), role, logger)
 	masl.SetCredentials(assertionOutput, usr.HomeDir, flags.Profile, logger)
@@ -135,7 +124,7 @@ func parseFlags(conf masl.Config) CLIFlags {
 	flag.StringVar(&flags.Profile, "profile", conf.Profile, "AWS profile name")
 	flag.StringVar(&flags.Env, "env", "", "Work environment")
 	flag.StringVar(&flags.Account, "account", "", "AWS Account ID or name")
-	flag.StringVar(&flags.Role, "role", "", "OneLogin role name")
+	flag.StringVar(&flags.Role, "role", "", "AWS role name")
 
 	flag.Parse()
 
@@ -164,4 +153,27 @@ func initAccountFilter(conf masl.Config, flags CLIFlags, log *logrus.Logger) []s
 	}).Info("Initialized the account filter")
 
 	return accountFilter
+}
+
+func selectRole(roles []*masl.SAMLAssertionRole) *masl.SAMLAssertionRole {
+	if len(roles) == 1 {
+		return roles[0]
+	}
+
+	for index, role := range roles {
+		role.ID = index + 1
+		fmt.Printf("[%2d] > %s:%-15s :: %s\n", role.ID, role.AccountID, role.RoleArn[31:], role.AccountName)
+	}
+
+	// Choose a role
+	fmt.Print("Enter a role number:")
+	reader := bufio.NewReader(os.Stdin)
+	roleNumber, _ := reader.ReadString('\n')
+	roleNumber = strings.TrimRight(roleNumber, "\r\n")
+	index, err := strconv.Atoi(roleNumber)
+	if err != nil {
+		fmt.Println(err)
+		logger.Fatal(err)
+	}
+	return roles[index-1]
 }
