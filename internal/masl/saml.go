@@ -140,8 +140,9 @@ func (byName RolesByName) Less(i, j int) bool {
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
 func logRequest(log *logrus.Logger, req *http.Request) {
-	dump, _ := httputil.DumpRequest(req, true)
-	log.Debug(string(dump))
+	// dump, _ := httputil.DumpRequest(req, true)
+	//TODO: shame on me, filter passwords from the requests before logging them!
+	// log.Debug(string(dump))
 }
 
 func logResponse(log *logrus.Logger, resp *http.Response) {
@@ -205,6 +206,10 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 		} else {
 			// MFA token is required
 			assertionResponse := samlAssertionResponseMFA{}
+			log.WithFields(logrus.Fields{
+				"response": assertionResponse,
+			}).Debug("Assertionresponse in case of  MFA")
+
 			json.Unmarshal(body, &assertionResponse)
 
 			samlData = SAMLAssertionData{
