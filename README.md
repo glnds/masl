@@ -95,6 +95,8 @@ Optional command line arguments:
         AWS Account ID or name
   -env string
         Work environment
+  -legacy-token
+        configures legacy aws_security_token (for Boto support)
   -profile string
         AWS profile name (default "masl")
   -role string
