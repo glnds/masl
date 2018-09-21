@@ -21,11 +21,12 @@ var version, build string
 
 // CLIFlags represents the command line flags
 type CLIFlags struct {
-	Version bool
-	Profile string
-	Env     string
-	Account string
-	Role    string
+	Version     bool
+	LegacyToken bool
+	Profile     string
+	Env         string
+	Account     string
+	Role        string
 }
 
 func main() {
@@ -107,7 +108,7 @@ func main() {
 	role := selectRole(roles)
 
 	assertionOutput := masl.AssumeRole(samlData, int64(conf.Duration), role, logger)
-	masl.SetCredentials(assertionOutput, usr.HomeDir, flags.Profile, logger)
+	masl.SetCredentials(assertionOutput, usr.HomeDir, flags.Profile, flags.LegacyToken, logger)
 
 	logger.Info("w00t w00t masl for you!, Successfully authenticated.")
 
@@ -121,6 +122,7 @@ func parseFlags(conf masl.Config) CLIFlags {
 	flags := new(CLIFlags)
 
 	flag.BoolVar(&flags.Version, "version", false, "prints MASL version")
+	flag.BoolVar(&flags.LegacyToken, "legacy-token", false, "configures legacy aws_security_token (for Boto support)")
 	flag.StringVar(&flags.Profile, "profile", conf.Profile, "AWS profile name")
 	flag.StringVar(&flags.Env, "env", "", "Work environment")
 	flag.StringVar(&flags.Account, "account", "", "AWS Account ID or name")
