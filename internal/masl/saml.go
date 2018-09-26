@@ -95,6 +95,7 @@ type samlAssertionResponseMFA struct {
 type SAMLAssertionData struct {
 	MFARequired bool
 	DeviceID    int
+	DeviceType  string
 	StateToken  string
 	Data        string
 }
@@ -215,6 +216,7 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 			samlData = SAMLAssertionData{
 				MFARequired: true,
 				DeviceID:    assertionResponse.Data[0].Devices[0].DeviceID,
+				DeviceType:  assertionResponse.Data[0].Devices[0].DeviceType,
 				StateToken:  assertionResponse.Data[0].StateToken,
 			}
 		}

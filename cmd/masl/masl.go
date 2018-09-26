@@ -87,7 +87,11 @@ func main() {
 	var samlData string
 	if samlAssertionData.MFARequired {
 		// Ask for a new otp
-		fmt.Print("OneLogin Protect Token: ")
+		if strings.Contains(strings.ToLower(samlAssertionData.DeviceType), "yubikey") {
+			fmt.Print("Enter your YibuKey security code: ")
+		} else {
+			fmt.Printf("Enter your %s one-time password: ", samlAssertionData.DeviceType)
+		}
 		otp, _ := reader.ReadString('\n')
 		samlData, err = masl.VerifyMFA(conf, logger, samlAssertionData, otp, apiToken)
 		// OneLogin Verify MFA API call
