@@ -2,6 +2,7 @@
 *
 !*.*
 !*/
+!Makefile
 
 *.exe
 *.dll
