@@ -32,6 +32,7 @@ Username = 'onelogin username or email'
 Optional settings:
 ```
 Duration = 'Assume role maximum session duration' (default 3600)
+LegacyToken = true/false (configures legacy aws_security_token (for Boto support))
 Debug = true/false (Set to true for debug logging, default off)
 Profile = 'Value for environment variable AWS_PROFILE' (default = 'masl')
 ```

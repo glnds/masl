@@ -28,6 +28,7 @@ type Config struct {
 	Duration     int    `toml:"Duration"`
 	Profile      string `toml:"Profile"`
 	DefaultRole  string `toml:"DefaultRole"`
+	LegacyToken  bool   `toml:"LegacyToken"`
 	Debug        bool   `toml:"Debug"`
 	Environments []struct {
 		Name     string   `toml:"Name"`
@@ -45,7 +46,7 @@ func GetConfig(logger *logrus.Logger) Config {
 	}
 
 	// Read masl.toml config file for initialization
-	conf := Config{Profile: "masl", Debug: false, Duration: 3600} // Set default values
+	conf := Config{Profile: "masl", LegacyToken: false, Debug: false, Duration: 3600} // Set default values
 	if _, err := toml.DecodeFile(usr.HomeDir+string(os.PathSeparator)+"masl.toml", &conf); err != nil {
 		log.Fatal(err.Error())
 	}
@@ -59,6 +60,7 @@ func GetConfig(logger *logrus.Logger) Config {
 		"username":      conf.Username,
 		"profile":       conf.Profile,
 		"duration":      conf.Duration,
+		"legacyToken":   conf.LegacyToken,
 		"debug":         conf.Debug,
 		"#environments": len(conf.Environments),
 		"#accounts":     len(conf.Accounts),
