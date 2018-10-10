@@ -126,7 +126,8 @@ func parseFlags(conf masl.Config) CLIFlags {
 	flags := new(CLIFlags)
 
 	flag.BoolVar(&flags.Version, "version", false, "prints MASL version")
-	flag.BoolVar(&flags.LegacyToken, "legacy-token", conf.LegacyToken, "configures legacy aws_security_token (for Boto support)")
+	flag.BoolVar(&flags.LegacyToken, "legacy-token", conf.LegacyToken,
+		"configures legacy aws_security_token (for Boto support)")
 	flag.StringVar(&flags.Profile, "profile", conf.Profile, "AWS profile name")
 	flag.StringVar(&flags.Env, "env", "", "Work environment")
 	flag.StringVar(&flags.Account, "account", "", "AWS Account ID or name")
