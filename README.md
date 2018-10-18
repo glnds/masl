@@ -13,7 +13,7 @@ This tool allows you to use [onelogin](https://www.onelogin.com/) to assume an A
 
 ### Installation
 
-Just download the latest release under https://github.com/glnds/masl/releases.
+Just download the latest release under https://github.com/glnds/masl/releases. Don't forget to make it executable and link it from somewhere in your $PATH on UNIX-like platforms.
 
 ### Configuration
 
