@@ -88,7 +88,7 @@ func main() {
 	if samlAssertionData.MFARequired {
 		// Ask for a new otp
 		if strings.Contains(strings.ToLower(samlAssertionData.DeviceType), "yubikey") {
-			fmt.Print("Enter your YibuKey security code: ")
+			fmt.Print("Enter your YubiKey security code: ")
 		} else {
 			fmt.Printf("Enter your %s one-time password: ", samlAssertionData.DeviceType)
 		}
