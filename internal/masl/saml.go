@@ -328,9 +328,9 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 			string(os.PathSeparator) + "credentials"
 	}
 	var cfg *ini.File
-	
+
 	ini.PrettyFormat = false
-	
+
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		log.Info("AWS credentials file does not exists.")
 		cfg = ini.Empty()
