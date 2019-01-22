@@ -59,6 +59,7 @@ func GetConfig(logger *logrus.Logger) Config {
 		"subdomain":     conf.Subdomain,
 		"username":      conf.Username,
 		"profile":       conf.Profile,
+		"defaultRole":   conf.DefaultRole,
 		"duration":      conf.Duration,
 		"legacyToken":   conf.LegacyToken,
 		"debug":         conf.Debug,
