@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/user"
+	"syscall"
 
 	"bufio"
 	"flag"
@@ -12,7 +13,9 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/glnds/masl/internal/masl"
-	"github.com/howeyc/gopass"
+	"golang.org/x/crypto/ssh/terminal"
+	// "github.com/howeyc/gopass"
+	// "github.com/howeyc/gopass"
 )
 
 var logger = logrus.New()
@@ -73,10 +76,13 @@ func main() {
 
 	// Ask for the user's password
 	fmt.Print("OneLogin Password: ")
-	password, _ := gopass.GetPasswdMasked()
+	bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin))
+	// password, _ := gopass.GetPasswdMasked()
+	password := string(bytePassword)
+	fmt.Println() // it's necessary to add a new line after user's input
 
 	// OneLogin SAML assertion API call
-	samlAssertionData, err := masl.SAMLAssertion(conf, logger, string(password), apiToken)
+	samlAssertionData, err := masl.SAMLAssertion(conf, logger, password, apiToken)
 	if err != nil {
 		fmt.Println(err)
 		logger.Fatal(err)
