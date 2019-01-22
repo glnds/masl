@@ -76,7 +76,7 @@ func main() {
 
 	// Ask for the user's password
 	fmt.Print("OneLogin Password: ")
-	bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin))
+	bytePassword, _ := terminal.ReadPassword(syscall.Stdin)
 	// password, _ := gopass.GetPasswdMasked()
 	password := string(bytePassword)
 	fmt.Println() // it's necessary to add a new line after user's input
