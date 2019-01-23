@@ -76,15 +76,13 @@ func main() {
 
 	// Ask for the user's password
 	fmt.Print("OneLogin Password: ")
-	bytePassword, _ := terminal.ReadPassword(syscall.Stdin)
-	// password, _ := gopass.GetPasswdMasked()
+	bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin)) // nolint
 	password := string(bytePassword)
-	fmt.Println() // it's necessary to add a new line after user's input
 
 	// OneLogin SAML assertion API call
 	samlAssertionData, err := masl.SAMLAssertion(conf, logger, password, apiToken)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("\n%s\n", err)
 		logger.Fatal(err)
 	}
 
@@ -94,9 +92,9 @@ func main() {
 	if samlAssertionData.MFARequired {
 		// Ask for a new otp
 		if strings.Contains(strings.ToLower(samlAssertionData.DeviceType), "yubikey") {
-			fmt.Print("Enter your YubiKey security code: ")
+			fmt.Printf("\nEnter your YubiKey security code: ")
 		} else {
-			fmt.Printf("Enter your %s one-time password: ", samlAssertionData.DeviceType)
+			fmt.Printf("\nEnter your %s one-time password: ", samlAssertionData.DeviceType)
 		}
 		otp, _ := reader.ReadString('\n')
 		samlData, err = masl.VerifyMFA(conf, logger, samlAssertionData, otp, apiToken)
@@ -106,6 +104,7 @@ func main() {
 			logger.Fatal(err)
 		}
 	} else {
+		fmt.Println()
 		samlData = samlAssertionData.Data
 	}
 
