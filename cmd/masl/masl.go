@@ -90,14 +90,17 @@ func main() {
 
 	var samlData string
 	if samlAssertionData.MFARequired {
+		fmt.Print("\n")
+		device := selectMFADevice(samlAssertionData.Devices)
 		// Ask for a new otp
-		if strings.Contains(strings.ToLower(samlAssertionData.DeviceType), "yubikey") {
-			fmt.Printf("\nEnter your YubiKey security code: ")
+		if strings.Contains(strings.ToLower(device.DeviceType), "yubikey") {
+			fmt.Printf("Enter your YubiKey security code: ")
 		} else {
-			fmt.Printf("\nEnter your %s one-time password: ", samlAssertionData.DeviceType)
+			fmt.Printf("Enter your %s one-time password: ", device.DeviceType)
 		}
 		otp, _ := reader.ReadString('\n')
-		samlData, err = masl.VerifyMFA(conf, logger, samlAssertionData, otp, apiToken)
+		samlData, err = masl.VerifyMFA(conf, logger, device.DeviceID, samlAssertionData.StateToken,
+			otp, apiToken)
 		// OneLogin Verify MFA API call
 		if err != nil {
 			fmt.Println(err)
@@ -188,4 +191,26 @@ func selectRole(roles []*masl.SAMLAssertionRole) *masl.SAMLAssertionRole {
 		logger.Fatal(err)
 	}
 	return roles[index-1]
+}
+
+func selectMFADevice(devices []masl.MFADevice) masl.MFADevice {
+	if len(devices) == 1 {
+		return devices[0]
+	}
+
+	for index, device := range devices {
+		fmt.Printf("[%2d] > %s\n", index+1, device.DeviceType)
+	}
+
+	// Choose a MFA device
+	fmt.Print("Enter the MFA device number:")
+	reader := bufio.NewReader(os.Stdin)
+	deviceNumber, _ := reader.ReadString('\n')
+	deviceNumber = strings.TrimRight(deviceNumber, "\r\n")
+	index, err := strconv.Atoi(deviceNumber)
+	if err != nil {
+		fmt.Println(err)
+		logger.Fatal(err)
+	}
+	return devices[index-1]
 }

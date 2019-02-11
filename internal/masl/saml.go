@@ -75,13 +75,10 @@ type samlAssertionResponseMFA struct {
 		Error   bool   `json:"error"`
 	} `json:"status"`
 	Data []struct {
-		CallbackURL string `json:"callback_url"`
-		Devices     []struct {
-			DeviceID   int    `json:"device_id"`
-			DeviceType string `json:"device_type"`
-		} `json:"devices"`
-		StateToken string `json:"state_token"`
-		User       struct {
+		CallbackURL string      `json:"callback_url"`
+		Devices     []MFADevice `json:"devices"`
+		StateToken  string      `json:"state_token"`
+		User        struct {
 			Email     string `json:"email"`
 			Lastname  string `json:"lastname"`
 			Username  string `json:"username"`
@@ -94,10 +91,15 @@ type samlAssertionResponseMFA struct {
 // SAMLAssertionData internal Generic SAMLAssertion response representation
 type SAMLAssertionData struct {
 	MFARequired bool
-	DeviceID    int
-	DeviceType  string
 	StateToken  string
 	Data        string
+	Devices     []MFADevice
+}
+
+// MFADevice represents an MFA device
+type MFADevice struct {
+	DeviceID   int    `json:"device_id"`
+	DeviceType string `json:"device_type"`
 }
 
 // VerifyMFARequest represents the OneLogin Verify MFA request
@@ -215,10 +217,12 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 
 			samlData = SAMLAssertionData{
 				MFARequired: true,
-				DeviceID:    assertionResponse.Data[0].Devices[0].DeviceID,
-				DeviceType:  assertionResponse.Data[0].Devices[0].DeviceType,
 				StateToken:  assertionResponse.Data[0].StateToken,
+				Devices:     assertionResponse.Data[0].Devices,
+				// DeviceID:    assertionResponse.Data[0].Devices[0].DeviceID,
+				// DeviceType:  assertionResponse.Data[0].Devices[0].DeviceType,
 			}
+			// copy(assertionResponse.Data[0].Devices, samlData.Devices)
 		}
 	} else {
 		samlErr = errors.New(message)
@@ -227,15 +231,15 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 }
 
 // VerifyMFA Call to https://api.eu.onelogin.com/api/1/saml_assertion/verify_factor
-func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp string,
+func VerifyMFA(conf Config, log *logrus.Logger, deviceID int, stateToken string, otp string,
 	apiToken string) (string, error) {
 
 	url := conf.BaseURL + verifyFactorAPI
 	requestBody, err := json.Marshal(VerifyMFARequest{
 		AppID:      conf.AppID,
 		OtpToken:   otp,
-		DeviceID:   strconv.Itoa(data.DeviceID),
-		StateToken: data.StateToken})
+		DeviceID:   strconv.Itoa(deviceID),
+		StateToken: stateToken})
 	if err != nil {
 		log.Fatalln(err)
 	}
