@@ -91,7 +91,7 @@ func main() {
 	var samlData string
 	if samlAssertionData.MFARequired {
 		fmt.Print("\n")
-		device := selectMFADevice(samlAssertionData.Devices)
+		device := selectMFADevice(samlAssertionData.Devices, conf.DefaulMFADevice)
 		// Ask for a new otp
 		if strings.Contains(strings.ToLower(device.DeviceType), "yubikey") {
 			fmt.Printf("Enter your YubiKey security code: ")
@@ -193,16 +193,26 @@ func selectRole(roles []*masl.SAMLAssertionRole) *masl.SAMLAssertionRole {
 	return roles[index-1]
 }
 
-func selectMFADevice(devices []masl.MFADevice) masl.MFADevice {
+func selectMFADevice(devices []masl.MFADevice, defaultMFADevice string) masl.MFADevice {
 	if len(devices) == 1 {
 		return devices[0]
 	}
 
+	if defaultMFADevice != "" {
+		// Try to select the default MFA device
+		for _, device := range devices {
+			if strings.EqualFold(device.DeviceType, defaultMFADevice) {
+				fmt.Printf("Picked your default defined MFA device.\n")
+				return device
+			}
+		}
+		fmt.Printf("No MFA device match found for your default defined MFA Device: [%s].\n",
+			defaultMFADevice)
+	}
+	// Manually select an MFA device
 	for index, device := range devices {
 		fmt.Printf("[%2d] > %s\n", index+1, device.DeviceType)
 	}
-
-	// Choose a MFA device
 	fmt.Print("Enter the MFA device number:")
 	reader := bufio.NewReader(os.Stdin)
 	deviceNumber, _ := reader.ReadString('\n')

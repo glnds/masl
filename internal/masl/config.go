@@ -19,18 +19,19 @@ type Accounts []struct {
 
 // Config represents the masl config file
 type Config struct {
-	BaseURL      string `toml:"BaseURL"`
-	ClientID     string `toml:"ClientID"`
-	ClientSecret string `toml:"ClientSecret"`
-	AppID        string `toml:"AppID"`
-	Subdomain    string `toml:"Subdomain"`
-	Username     string `toml:"Username"`
-	Duration     int    `toml:"Duration"`
-	Profile      string `toml:"Profile"`
-	DefaultRole  string `toml:"DefaultRole"`
-	LegacyToken  bool   `toml:"LegacyToken"`
-	Debug        bool   `toml:"Debug"`
-	Environments []struct {
+	BaseURL         string `toml:"BaseURL"`
+	ClientID        string `toml:"ClientID"`
+	ClientSecret    string `toml:"ClientSecret"`
+	AppID           string `toml:"AppID"`
+	Subdomain       string `toml:"Subdomain"`
+	Username        string `toml:"Username"`
+	Duration        int    `toml:"Duration"`
+	Profile         string `toml:"Profile"`
+	DefaultRole     string `toml:"DefaultRole"`
+	LegacyToken     bool   `toml:"LegacyToken"`
+	DefaulMFADevice string `toml:"DefaulMFADevice"`
+	Debug           bool   `toml:"Debug"`
+	Environments    []struct {
 		Name     string   `toml:"Name"`
 		Accounts []string `toml:"Accounts"`
 	} `toml:"Environments"`

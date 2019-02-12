@@ -35,6 +35,7 @@ Duration = 'Assume role maximum session duration' (default 3600)
 LegacyToken = true/false (configures legacy aws_security_token (for Boto support))
 Debug = true/false (Set to true for debug logging, default off)
 Profile = 'Value for environment variable AWS_PROFILE' (default = 'masl')
+DefaulMFADevice = 'name of your default MFA device (for example 'Yubico YubiKey')'
 ```
 
 If specifying a custom duration assure this duration is allowed on the AWS role itself as well. 
@@ -131,8 +132,6 @@ This project includes a ```makefile`` to make your life easy.
 TODO: Explain how to run the automated tests for this system
 
 
-
-
 ## Built With
 
 * [Snyk](https://snyk.io/) - Continuously vulnerabilities scanning
@@ -154,6 +153,18 @@ A log file ```masl.log``` is created and added on your user's home directory. Th
 
 [SemVer](http://semver.org/) is used for versioning. For the versions available, see the [tags on this repository](https://github.com/glnds/masl/tags). 
 
-## License
 
+## FAQ
+### My login is successful but I'm unable to access my AWS account?
+The AWS CLI uses ```default``` as default for the variable ```AWS_PROFILE```. MASL uses ```masl``` as default AWS profile name to store the AWS credentials (as a safety for not overriding your default settings). 
+
+To fix this do one of the following:
+- set the value of ```AWS_PROFILE``` to ```masl```
+- in your ```masl.toml``` add the line ```Profile = 'default'```
+- start masl with the ```-profile default``` option
+
+### I have multiple MFA devices defined, is it possible to set one of them as default?
+yes in your ```masl.toml``` set a value for the variable ```DefaulMFADevice```
+
+## License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
