@@ -29,8 +29,8 @@ type Config struct {
 	Profile         string `toml:"Profile"`
 	DefaultRole     string `toml:"DefaultRole"`
 	LegacyToken     bool   `toml:"LegacyToken"`
-	DefaulMFADevice string `toml:"DefaulMFADevice"`
 	Debug           bool   `toml:"Debug"`
+	DefaulMFADevice string `toml:"DefaulMFADevice"`
 	Environments    []struct {
 		Name     string   `toml:"Name"`
 		Accounts []string `toml:"Accounts"`
