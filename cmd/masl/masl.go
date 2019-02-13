@@ -118,9 +118,13 @@ func main() {
 		os.Exit(0)
 	}
 	role := selectRole(roles)
+	awsAuthenticate(samlData, conf, role, usr.HomeDir, flags)
+}
 
+func awsAuthenticate(samlData string, conf masl.Config, role *masl.SAMLAssertionRole,
+	homeDir string, flags CLIFlags) {
 	assertionOutput := masl.AssumeRole(samlData, int64(conf.Duration), role, logger)
-	masl.SetCredentials(assertionOutput, usr.HomeDir, flags.Profile, flags.LegacyToken, logger)
+	masl.SetCredentials(assertionOutput, homeDir, flags.Profile, flags.LegacyToken, logger)
 
 	logger.Info("w00t w00t masl for you!, Successfully authenticated.")
 
@@ -128,6 +132,18 @@ func main() {
 	fmt.Printf("Assumed User: %v\n", *assertionOutput.AssumedRoleUser.Arn)
 	fmt.Printf("In account: %v [%v]\n", role.AccountID, role.AccountName)
 	fmt.Printf("Token will expire on: %v\n", *assertionOutput.Credentials.Expiration)
+	awsProfile := os.Getenv("AWS_PROFILE")
+	if awsProfile == "" {
+		awsProfile = "default"
+	}
+	if flags.Profile != awsProfile {
+		fmt.Printf("\033[1;33m[WARNING] Your AWS credentials were stored under profile ")
+		fmt.Printf("'%s' but your AWS_PROFILE is set to '%s'!\n", flags.Profile, awsProfile)
+		fmt.Print("Please read the FAQ in the README (https://github.com/glnds/masl) ")
+		fmt.Println("in order to fix this.\033[0m")
+	} else {
+		fmt.Printf("\033[1;32mUsing AWS Profile: '%v'\033[0m\n", flags.Profile)
+	}
 }
 
 func parseFlags(conf masl.Config) CLIFlags {
