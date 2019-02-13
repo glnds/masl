@@ -219,10 +219,7 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 				MFARequired: true,
 				StateToken:  assertionResponse.Data[0].StateToken,
 				Devices:     assertionResponse.Data[0].Devices,
-				// DeviceID:    assertionResponse.Data[0].Devices[0].DeviceID,
-				// DeviceType:  assertionResponse.Data[0].Devices[0].DeviceType,
 			}
-			// copy(assertionResponse.Data[0].Devices, samlData.Devices)
 		}
 	} else {
 		samlErr = errors.New(message)
@@ -326,26 +323,34 @@ func AssumeRole(samlAssertion string, duration int64, role *SAMLAssertionRole,
 // SetCredentials Apply the STS credentials on the host
 func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir string,
 	profileName string, legacyToken bool, log *logrus.Logger) {
-	filename := os.Getenv("AWS_SHARED_CREDENTIALS_FILE")
-	if filename == "" {
-		filename = homeDir + string(os.PathSeparator) + ".aws" +
-			string(os.PathSeparator) + "credentials"
-	}
-	var cfg *ini.File
 
+	var cfg *ini.File
 	ini.PrettyFormat = false
 
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		log.Info("AWS credentials file does not exists.")
-		cfg = ini.Empty()
-		log.Info("New AWS credentials config created.")
-	} else {
-		cfg, err = ini.Load(filename)
-		if err != nil {
-			log.Fatal(err)
+	filename := os.Getenv("AWS_SHARED_CREDENTIALS_FILE")
+	if filename == "" {
+		path := homeDir + string(os.PathSeparator) + ".aws"
+		filename = path + string(os.PathSeparator) + "credentials"
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			os.Mkdir(path, 0755)
+			log.Info(".aws directory created.")
 		}
-		log.Info("AWS credentials file loaded.")
+		if _, err := os.Stat(filename); os.IsNotExist(err) {
+			emptyFile, err := os.Create(filename)
+			if err != nil {
+				log.Fatal(err)
+			}
+			emptyFile.Close()
+			log.Info("AWS credentials file created.")
+		}
 	}
+
+	var err error
+	cfg, err = ini.Load(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Info("AWS credentials file loaded.")
 
 	sec := cfg.Section(profileName)
 	sec.NewKey("aws_access_key_id", *assertionOutput.Credentials.AccessKeyId)
@@ -356,7 +361,7 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 	} else {
 		sec.DeleteKey("aws_security_token")
 	}
-	err := cfg.SaveTo(filename)
+	err = cfg.SaveTo(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
