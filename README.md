@@ -20,6 +20,9 @@ Just download the latest release under https://github.com/glnds/masl/releases. D
 - make it executable: ```sudo chmod +x masl```
 - done :)
 
+#### Windows
+- rename **masl-vx.x.x-windows-amd64** to **masl.exe** and execute to install.
+
 
 ### Configuration
 
