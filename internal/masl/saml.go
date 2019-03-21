@@ -75,13 +75,10 @@ type samlAssertionResponseMFA struct {
 		Error   bool   `json:"error"`
 	} `json:"status"`
 	Data []struct {
-		CallbackURL string `json:"callback_url"`
-		Devices     []struct {
-			DeviceID   int    `json:"device_id"`
-			DeviceType string `json:"device_type"`
-		} `json:"devices"`
-		StateToken string `json:"state_token"`
-		User       struct {
+		CallbackURL string      `json:"callback_url"`
+		Devices     []MFADevice `json:"devices"`
+		StateToken  string      `json:"state_token"`
+		User        struct {
 			Email     string `json:"email"`
 			Lastname  string `json:"lastname"`
 			Username  string `json:"username"`
@@ -94,10 +91,15 @@ type samlAssertionResponseMFA struct {
 // SAMLAssertionData internal Generic SAMLAssertion response representation
 type SAMLAssertionData struct {
 	MFARequired bool
-	DeviceID    int
-	DeviceType  string
 	StateToken  string
 	Data        string
+	Devices     []MFADevice
+}
+
+// MFADevice represents an MFA device
+type MFADevice struct {
+	DeviceID   int    `json:"device_id"`
+	DeviceType string `json:"device_type"`
 }
 
 // VerifyMFARequest represents the OneLogin Verify MFA request
@@ -215,9 +217,8 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 
 			samlData = SAMLAssertionData{
 				MFARequired: true,
-				DeviceID:    assertionResponse.Data[0].Devices[0].DeviceID,
-				DeviceType:  assertionResponse.Data[0].Devices[0].DeviceType,
 				StateToken:  assertionResponse.Data[0].StateToken,
+				Devices:     assertionResponse.Data[0].Devices,
 			}
 		}
 	} else {
@@ -227,15 +228,15 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 }
 
 // VerifyMFA Call to https://api.eu.onelogin.com/api/1/saml_assertion/verify_factor
-func VerifyMFA(conf Config, log *logrus.Logger, data SAMLAssertionData, otp string,
+func VerifyMFA(conf Config, log *logrus.Logger, deviceID int, stateToken string, otp string,
 	apiToken string) (string, error) {
 
 	url := conf.BaseURL + verifyFactorAPI
 	requestBody, err := json.Marshal(VerifyMFARequest{
 		AppID:      conf.AppID,
 		OtpToken:   otp,
-		DeviceID:   strconv.Itoa(data.DeviceID),
-		StateToken: data.StateToken})
+		DeviceID:   strconv.Itoa(deviceID),
+		StateToken: stateToken})
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -322,23 +323,34 @@ func AssumeRole(samlAssertion string, duration int64, role *SAMLAssertionRole,
 // SetCredentials Apply the STS credentials on the host
 func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir string,
 	profileName string, legacyToken bool, log *logrus.Logger) {
+
+	var cfg *ini.File
+	ini.PrettyFormat = false
+
 	filename := os.Getenv("AWS_SHARED_CREDENTIALS_FILE")
 	if filename == "" {
-		filename = homeDir + string(os.PathSeparator) + ".aws" +
-			string(os.PathSeparator) + "credentials"
-	}
-	var cfg *ini.File
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		log.Info("AWS credentials file does not exists.")
-		cfg = ini.Empty()
-		log.Info("New AWS credentials config created.")
-	} else {
-		cfg, err = ini.Load(filename)
-		if err != nil {
-			log.Fatal(err)
+		path := homeDir + string(os.PathSeparator) + ".aws"
+		filename = path + string(os.PathSeparator) + "credentials"
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			os.Mkdir(path, 0755)
+			log.Info(".aws directory created.")
 		}
-		log.Info("AWS credentials file loaded.")
+		if _, err := os.Stat(filename); os.IsNotExist(err) {
+			emptyFile, err := os.Create(filename)
+			if err != nil {
+				log.Fatal(err)
+			}
+			emptyFile.Close()
+			log.Info("AWS credentials file created.")
+		}
 	}
+
+	var err error
+	cfg, err = ini.Load(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Info("AWS credentials file loaded.")
 
 	sec := cfg.Section(profileName)
 	sec.NewKey("aws_access_key_id", *assertionOutput.Credentials.AccessKeyId)
@@ -349,7 +361,7 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 	} else {
 		sec.DeleteKey("aws_security_token")
 	}
-	err := cfg.SaveTo(filename)
+	err = cfg.SaveTo(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
