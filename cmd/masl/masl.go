@@ -124,7 +124,8 @@ func main() {
 func awsAuthenticate(samlData string, conf masl.Config, role *masl.SAMLAssertionRole,
 	homeDir string, flags CLIFlags) {
 	assertionOutput := masl.AssumeRole(samlData, int64(conf.Duration), role, logger)
-	masl.SetCredentials(assertionOutput, homeDir, flags.Profile, flags.LegacyToken, logger)
+	masl.SetCredentials(assertionOutput, homeDir, flags.Profile, flags.LegacyToken, logger) //profile
+	masl.SetCredentials(assertionOutput, homeDir, role.AccountName, flags.LegacyToken, logger) // account name
 
 	logger.Info("w00t w00t masl for you!, Successfully authenticated.")
 
@@ -142,7 +143,7 @@ func awsAuthenticate(samlData string, conf masl.Config, role *masl.SAMLAssertion
 		fmt.Print("Please read the FAQ in the README (https://github.com/glnds/masl) ")
 		fmt.Println("in order to fix this.\033[0m")
 	} else {
-		fmt.Printf("\033[1;32mUsing AWS Profile: '%v'\033[0m\n", flags.Profile)
+		fmt.Printf("\033[1;32mUsing AWS Profile(s): '%v' & '%v'\033[0m\n", flags.Profile, role.AccountName)
 	}
 }
 
