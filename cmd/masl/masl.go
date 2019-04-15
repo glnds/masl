@@ -124,7 +124,7 @@ func main() {
 func awsAuthenticate(samlData string, conf masl.Config, role *masl.SAMLAssertionRole,
 	homeDir string, flags CLIFlags) {
 	assertionOutput := masl.AssumeRole(samlData, int64(conf.Duration), role, logger)
-	masl.SetCredentials(assertionOutput, homeDir, flags.Profile, flags.LegacyToken, logger) //profile
+	masl.SetCredentials(assertionOutput, homeDir, flags.Profile, flags.LegacyToken, logger)    //profile
 	masl.SetCredentials(assertionOutput, homeDir, role.AccountName, flags.LegacyToken, logger) // account name
 
 	logger.Info("w00t w00t masl for you!, Successfully authenticated.")
