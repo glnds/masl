@@ -16,9 +16,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/ini.v1"
 )
 
