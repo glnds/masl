@@ -12,5 +12,7 @@ jobs:
 workflows:
   build-lint:
     jobs:
-      - build
       - golangci-lint/lint
+      - build:
+          requires:
+            - golangci-lint/lint
