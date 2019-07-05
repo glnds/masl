@@ -120,20 +120,11 @@ Assure the environment variable ```AWS_PROFILE``` is set to **masl** (or the ove
 
 ## Development
 
-### Dependency management
-Dependency management is done with ```dep```: https://github.com/golang/dep
-
-After ```git clone``` run ```dep ensure``` to make sure the project's dependencies are in sync.
-
-Please see [Daily Dep](https://golang.github.io/dep/docs/daily-dep.html) for more information about common ```dep``` commands.
-
 ### Makefile
 This project includes a ```makefile`` to make your life easy.
 - ```make clean```: clean up your workspace
 - ```make build```: build this project
-- ```make lint```: run [gometalinter](https://github.com/alecthomas/gometalinter)
-
-
+- ```make lint```: run `golangci-lint run`
 
 
 ## Running the tests
@@ -144,7 +135,7 @@ TODO: Explain how to run the automated tests for this system
 ## Built With
 
 * [Snyk](https://snyk.io/) - Continuously vulnerabilities scanning
-* [dep](https://golang.github.io/dep/) - Dependency Management for Go
+* [Go Modules]|(https://github.com/golang/go/wiki/Modules)
 
 ### Logging
 
