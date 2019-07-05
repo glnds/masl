@@ -135,7 +135,7 @@ TODO: Explain how to run the automated tests for this system
 ## Built With
 
 * [Snyk](https://snyk.io/) - Continuously vulnerabilities scanning
-* [Go Modules]|(https://github.com/golang/go/wiki/Modules)
+* [Go Modules](https://github.com/golang/go/wiki/Modules)
 
 ### Logging
 
