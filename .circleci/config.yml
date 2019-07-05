@@ -1,17 +1,16 @@
-
 # Golang CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2.1
+orbs:
+    golangci-lint: timakin/golangci-lint@0.1
 jobs:
   build:
     docker:
       - image: circleci/golang:1.12
     steps:
       - checkout
-      # - run: go get -u github.com/golang/dep/cmd/dep github.com/alecthomas/gometalinter && gometalinter --install
-      # - run: dep ensure --vendor-only
-      # - run: go vet ./...
-      # - run: go test -v ./...
-      # - run: gometalinter --config gometalinter.json  ./...
       - run: go build cmd/masl/masl.go
+workflows:
+  build-lint:
+    jobs:
+      - build
+      - golangci-lint/lint

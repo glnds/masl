@@ -1,7 +1,6 @@
 SHELL := /bin/bash
 
 BIN_DIR := $(GOPATH)/bin
-GOMETALINTER := $(BIN_DIR)/gometalinter
 PLATFORMS := windows linux darwin
 BINARY := masl
 
@@ -15,10 +14,6 @@ LDFLAGS=-ldflags "-X=main.version=$(VERSION) -X=main.build=$(BUILD)"
 os = $(word 1, $@)
 
 PKGS := $(shell go list ./... | grep -v /vendor)
-
-$(GOMETALINTER):
-	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install &> /dev/null
 
 clean:
 	go clean
@@ -35,8 +30,8 @@ test:
 	go test $(PKGS)
 .PHONY: test
 
-lint: $(GOMETALINTER)
-	gometalinter --vendor --config gometalinter.json  ./...
+lint:
+	golangci-lint run
 .PHONY: lint
 
 $(PLATFORMS):

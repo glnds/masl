@@ -112,7 +112,7 @@ func main() {
 	}
 
 	// Print all SAMLAssertion Roles
-	roles := masl.ParseSAMLAssertion(samlData, conf.Accounts, accountFilter, flags.Role)
+	roles := masl.ParseSAMLAssertion(samlData, conf.Accounts, logger, accountFilter, flags.Role)
 	if len(roles) == 0 {
 		fmt.Println("No  masl for you! You don't have permissions to any account!")
 		os.Exit(0)

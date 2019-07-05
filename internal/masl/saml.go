@@ -200,7 +200,9 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 			// MFA NOT Required
 			log.Info("MFA not required")
 			assertionResponse := samlAssertionResponse{}
-			json.Unmarshal(body, &assertionResponse)
+			if err := json.Unmarshal(body, &assertionResponse); err != nil {
+				log.Fatalln(err)
+			}
 
 			samlData = SAMLAssertionData{
 				MFARequired: false,
@@ -213,7 +215,9 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 				"response": assertionResponse,
 			}).Debug("Assertionresponse in case of  MFA")
 
-			json.Unmarshal(body, &assertionResponse)
+			if err := json.Unmarshal(body, &assertionResponse); err != nil {
+				log.Fatalln(err)
+			}
 
 			samlData = SAMLAssertionData{
 				MFARequired: true,
@@ -258,13 +262,15 @@ func VerifyMFA(conf Config, log *logrus.Logger, deviceID int, stateToken string,
 }
 
 // ParseSAMLAssertion parse the SAMLAssertion response data into a list of SAMLAssertionRoles
-func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, accountFilter []string,
-	role string) []*SAMLAssertionRole {
+func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, log *logrus.Logger,
+	accountFilter []string, role string) []*SAMLAssertionRole {
 
 	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
 
 	var samlResponse Response
-	xml.Unmarshal(sDec, &samlResponse)
+	if err := xml.Unmarshal(sDec, &samlResponse); err != nil {
+		log.Fatalln(err)
+	}
 
 	attributes := samlResponse.Assertion.AttributeStatement.Attributes
 
@@ -332,7 +338,9 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 		path := homeDir + string(os.PathSeparator) + ".aws"
 		filename = path + string(os.PathSeparator) + "credentials"
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			os.Mkdir(path, 0755)
+			if err := os.Mkdir(path, 0755); err != nil {
+				log.Fatalln(err)
+			}
 			log.Info(".aws directory created.")
 		}
 		if _, err := os.Stat(filename); os.IsNotExist(err) {
@@ -353,11 +361,19 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 	log.Info("AWS credentials file loaded.")
 
 	sec := cfg.Section(profileName)
-	sec.NewKey("aws_access_key_id", *assertionOutput.Credentials.AccessKeyId)
-	sec.NewKey("aws_secret_access_key", *assertionOutput.Credentials.SecretAccessKey)
-	sec.NewKey("aws_session_token", *assertionOutput.Credentials.SessionToken)
+	if _, err := sec.NewKey("aws_access_key_id", *assertionOutput.Credentials.AccessKeyId); err != nil {
+		log.Fatalln(err)
+	}
+	if _, err := sec.NewKey("aws_secret_access_key", *assertionOutput.Credentials.SecretAccessKey); err != nil {
+		log.Fatalln(err)
+	}
+	if _, err := sec.NewKey("aws_session_token", *assertionOutput.Credentials.SessionToken); err != nil {
+		log.Fatalln(err)
+	}
 	if legacyToken {
-		sec.NewKey("aws_security_token", *assertionOutput.Credentials.SessionToken)
+		if _, err := sec.NewKey("aws_security_token", *assertionOutput.Credentials.SessionToken); err != nil {
+			log.Fatalln(err)
+		}
 	} else {
 		sec.DeleteKey("aws_security_token")
 	}
@@ -395,7 +411,9 @@ func httpRequest(url string, auth string, jsonStr []byte, log *logrus.Logger, ta
 
 	logResponse(log, resp)
 
-	json.NewDecoder(resp.Body).Decode(target)
+	if err := json.NewDecoder(resp.Body).Decode(target); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func httpRequestRaw(url string, auth string, jsonStr []byte, log *logrus.Logger) []byte {
