@@ -79,7 +79,7 @@ func SearchAccounts(accountInfo Accounts, accountID string) (string, bool) {
 			return account.Name, account.EnvironmentIndependent
 		}
 	}
-	return "", false
+	return "untitled", false
 }
 
 // GetAccountID get the account id for a given acount name (alias)

@@ -14,8 +14,6 @@ import (
 	"github.com/glnds/masl/internal/masl"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
-	// "github.com/howeyc/gopass"
-	// "github.com/howeyc/gopass"
 )
 
 var logger = logrus.New()
