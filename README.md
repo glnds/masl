@@ -160,7 +160,7 @@ A log file ```masl.log``` is created and added on your user's home directory. Th
 
 ## FAQ
 ### My login is successful but I'm unable to access my AWS account?
-The AWS CLI uses ```default``` as default for the variable ```AWS_PROFILE```. MASL uses ```masl``` as default AWS profile name to store the AWS credentials (as a safety for not overriding your default settings). 
+The AWS CLI uses ```default``` as default for the variable ```AWS_PROFILE```. MASL uses ```masl``` as default AWS profile name to store the AWS credentials (as a safety net for not overriding your default settings). 
 
 To fix this do one of the following:
 - set the value of ```AWS_PROFILE``` to ```masl```
