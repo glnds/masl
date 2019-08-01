@@ -1,0 +1,37 @@
+BaseURL = 'https://api.eu.onelogin.com/'
+ClientID = '6c1e4...ef405'
+ClientSecret = '342e0...2b052'
+AppID = '123456'
+Subdomain = 'somedomain'
+Username = 'your.name@somedomain.com'
+Duration = 43200
+
+Debug = true
+DefaulMFADevice = 'Yubico YubiKey'
+
+# Profile = 'default'
+
+[[Environments]]
+Name = 'Environment-1'
+Accounts = ['8349037479988', '848238092008']
+
+[[Environments]]
+Name = 'Environment-2'
+Accounts = ['887766372677', '583896339505']
+
+
+[[Accounts]]
+ID = '349037479988'
+Name = 'AWS-account-1'
+
+[[Accounts]]
+ID = '848238092008'
+Name = 'AWS-account-2'
+
+[[Accounts]]
+ID = '887766372677'
+Name = 'AWS-account-3'
+
+[[Accounts]]
+ID = '523778887773'
+Name = 'AWS-account-4'
