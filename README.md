@@ -26,7 +26,11 @@ Just download the latest release under https://github.com/glnds/masl/releases. D
 
 ### Configuration
 
-All configuration is done using a ```masl.toml``` file in your user's home directory.
+All configuration is done using a `masl.toml` file in your user's home directory.
+An example toml config file is include: (masl-example.toml)[https://github.com/glnds/masl/blob/master/masl-example.toml].
+Copy `masl-example.toml` and rename it to `masl.toml`. Adjust the values to reflect your environment.
+
+
 The minimal configuration should look like this:
 ```
 
