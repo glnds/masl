@@ -120,7 +120,7 @@ Optional command line arguments:
         prints MASL version
 ```
 
-Assure the environment variable ```AWS_PROFILE``` is set to **masl** (or the overrided value specified in ```masl.toml``` or the ```-profile``` command line optiont).
+Assure the environment variable ```AWS_PROFILE``` is set to **masl** (or the overrided value specified in ```masl.toml``` or the ```-profile``` command line option).
 
 ## Development
 
