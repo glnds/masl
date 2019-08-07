@@ -3,16 +3,27 @@ version: 2.1
 orbs:
     golangci-lint: timakin/golangci-lint@0.1
 jobs:
-  build:
+  # build:
+  #   docker:
+  #     - image: circleci/golang:1.12
+  #   steps:
+  #     - checkout
+  #     - run: go build cmd/masl/masl.go
+  release:
     docker:
       - image: circleci/golang:1.12
     steps:
       - checkout
-      - run: go build cmd/masl/masl.go
+      - run: curl -sL https://git.io/goreleaser | bash
 workflows:
-  build-lint:
+  release:
     jobs:
       - golangci-lint/lint
-      - build:
+      - release:
           requires:
             - golangci-lint/lint
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
