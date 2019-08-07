@@ -20,7 +20,7 @@
 .glide/
 
 # TOML config files
-masl.toml
+.masl/
 
 .idea/
 

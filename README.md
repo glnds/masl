@@ -26,9 +26,9 @@ Just download the latest release under https://github.com/glnds/masl/releases. D
 
 ### Configuration
 
-All configuration is done using a `masl.toml` file in your user's home directory.
+All configuration is done using a `.masl/config.toml` file in your user's home directory.
 An example toml config file is included: [masl-example.toml](https://github.com/glnds/masl/blob/master/masl-example.toml).
-Copy `masl-example.toml` and rename it to `masl.toml`. Adjust the values to reflect your environment.
+Copy `masl-example.toml` and rename it to `.masl/config.toml`. Adjust the values to reflect your environment.
 
 
 The minimal configuration should look like this:
@@ -55,7 +55,7 @@ If specifying a custom duration assure this duration is allowed on the AWS role 
 See: [Enable Federated API Access to your AWS Resources for up to 12 hours Using IAM Roles](https://aws.amazon.com/blogs/security/enable-federated-api-access-to-your-aws-resources-for-up-to-12-hours-using-iam-roles/)
 
 #### Multi-Account management
-One of the main drivers to develop another Onelogin CLI authenticator was to ease the management of multiple AWS accounts. Most of the tools currently lack those features and that makes switching AWS accounts bothersome. For this purpose ```masl.toml``` supports the following features:
+One of the main drivers to develop another Onelogin CLI authenticator was to ease the management of multiple AWS accounts. Most of the tools currently lack those features and that makes switching AWS accounts bothersome. For this purpose ```.masl/config.toml``` supports the following features:
 
 ##### Account naming
 You can provide account names (aliases) for all accounts you have access to:
@@ -120,7 +120,7 @@ Optional command line arguments:
         prints MASL version
 ```
 
-Assure the environment variable ```AWS_PROFILE``` is set to **masl** (or the overrided value specified in ```masl.toml``` or the ```-profile``` command line option).
+Assure the environment variable ```AWS_PROFILE``` is set to **masl** (or the overrided value specified in ```.masl/config.toml``` or the ```-profile``` command line option).
 
 ## Development
 
@@ -143,7 +143,7 @@ TODO: Explain how to run the automated tests for this system
 
 ### Logging
 
-A log file ```masl.log``` is created and added on your user's home directory. The default log level is 'INFO'. For debug logging set ```Debug = true``` in ```masl.toml```.
+A log file ```masl.log``` is created and added on your user's home directory. The default log level is 'INFO'. For debug logging set ```Debug = true``` in ```.masl/config.toml```.
 
 ## Contributing
 
@@ -164,11 +164,11 @@ The AWS CLI uses ```default``` as default for the variable ```AWS_PROFILE```. MA
 
 To fix this do one of the following:
 - set the value of ```AWS_PROFILE``` to ```masl```
-- in your ```masl.toml``` add the line ```Profile = 'default'```
+- in your ```.masl/config.toml``` add the line ```Profile = 'default'```
 - start masl with the ```-profile default``` option
 
 ### I have multiple MFA devices defined, is it possible to set one of them as default?
-yes in your ```masl.toml``` set a value for the variable ```DefaulMFADevice```
+yes in your ```.masl/config.toml``` set a value for the variable ```DefaulMFADevice```
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
