@@ -1,0 +1,108 @@
+project_name: masl
+release:
+  github:
+    owner: glnds
+    name: masl
+  name_template: '{{.Tag}}'
+brews:
+- name: masl
+  commit_author:
+    name: goreleaserbot
+    email: goreleaser@carlosbecker.com
+  install: bin.install "masl"
+scoop:
+  name: masl
+  commit_author:
+    name: goreleaserbot
+    email: goreleaser@carlosbecker.com
+  url_template: https://github.com/glnds/masl/releases/download/{{ .Tag }}/{{ .ArtifactName
+    }}
+builds:
+- id: masl
+  goos:
+  - linux
+  - darwin
+  goarch:
+  - amd64
+  - "386"
+  goarm:
+  - "6"
+  targets:
+  - linux_amd64
+  - linux_386
+  - darwin_amd64
+  - darwin_386
+  main: ./cmd/masl/masl.go
+  ldflags:
+  - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+    -X main.builtBy=goreleaser
+  binary: masl
+  env:
+  - CGO_ENABLED=0
+  lang: go
+archives:
+- id: default
+  builds:
+  - masl
+  name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+    }}v{{ .Arm }}{{ end }}'
+  replacements:
+    "386": i386
+    amd64: x86_64
+    darwin: Darwin
+    linux: Linux
+    windows: Windows
+  format: tar.gz
+  files:
+  - licence*
+  - LICENCE*
+  - license*
+  - LICENSE*
+  - readme*
+  - README*
+  - changelog*
+  - CHANGELOG*
+nfpms:
+- name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+    }}v{{ .Arm }}{{ end }}'
+  id: default
+  builds:
+  - masl
+  bindir: /usr/local/bin
+snapcrafts:
+- name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+    }}v{{ .Arm }}{{ end }}'
+  builds:
+  - masl
+snapshot:
+  name_template: '{{ .Tag }}-next'
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+changelog:
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+  sort: asc
+dist: dist
+signs:
+- cmd: gpg
+  args:
+  - --output
+  - $signature
+  - --detach-sig
+  - $artifact
+  signature: ${artifact}.sig
+  artifacts: none
+env_files:
+  github_token: ~/.config/goreleaser/github_token
+  gitlab_token: ~/.config/goreleaser/gitlab_token
+before:
+  hooks:
+  - go mod download
+  - go generate ./...
+github_urls:
+  download: https://github.com
+gitlab_urls:
+  download: https://gitlab.com

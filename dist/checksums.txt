@@ -1,0 +1,4 @@
+d9d7a42176ea88dcadbb33dcfa802b7d9e0222da91f48ab9d295615aa07c4c16  masl_1.2.7-next_Linux_i386.tar.gz
+a430bfa663c4a96eb504a0615d6bbfaf4bdbf4d6db1659543827a99575870f9d  masl_1.2.7-next_Linux_x86_64.tar.gz
+cb749e4873060c3fb37d339d50adb8088323afb08dda09209b298068d72516a4  masl_1.2.7-next_Darwin_i386.tar.gz
+eb497333c58b576c315fa5f620caba2efc9bb7af6c4f5d2d6a8cebcd8d01c9a8  masl_1.2.7-next_Darwin_x86_64.tar.gz
