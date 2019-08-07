@@ -38,7 +38,7 @@ type Config struct {
 	Accounts Accounts `toml:"Accounts"`
 }
 
-// GetConfig reads the masl.toml configuration file for initialization.
+// GetConfig reads the .masl/config.toml configuration file for initialization.
 func GetConfig(logger *logrus.Logger) Config {
 
 	usr, err := user.Current()
@@ -46,9 +46,9 @@ func GetConfig(logger *logrus.Logger) Config {
 		log.Fatal(err)
 	}
 
-	// Read masl.toml config file for initialization
+	// Read .masl/config.toml config file for initialization
 	conf := Config{Profile: "masl", LegacyToken: false, Debug: false, Duration: 3600} // Set default values
-	if _, err := toml.DecodeFile(usr.HomeDir+string(os.PathSeparator)+"masl.toml", &conf); err != nil {
+	if _, err := toml.DecodeFile(usr.HomeDir+string(os.PathSeparator)+".masl"+string(os.PathSeparator)+"config.toml", &conf); err != nil {
 		log.Fatal(err.Error())
 	}
 
