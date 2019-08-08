@@ -3,12 +3,6 @@ version: 2.1
 orbs:
     golangci-lint: timakin/golangci-lint@0.1
 jobs:
-  # build:
-  #   docker:
-  #     - image: circleci/golang:1.12
-  #   steps:
-  #     - checkout
-  #     - run: go build cmd/masl/masl.go
   release:
     docker:
       - image: circleci/golang:1.12

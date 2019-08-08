@@ -1,5 +1,6 @@
 [![CircleCI](https://circleci.com/gh/glnds/masl.svg?style=svg)](https://circleci.com/gh/glnds/masl)
 [![Go Report Card](https://goreportcard.com/badge/github.com/glnds/masl)](https://goreportcard.com/report/github.com/glnds/masl)
+[![Known Vulnerabilities](https://snyk.io/test/github/glnds/masl/badge.svg)](https://snyk.io/test/github/glnds/masl)
 
 # MASL
 
