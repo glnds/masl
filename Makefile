@@ -5,7 +5,7 @@ PLATFORMS := windows linux darwin
 BINARY := masl
 
 # These will be provided to the target
-VERSION := 2.0.0
+VERSION := 2.0.1
 BUILD := `git rev-parse HEAD`
 
 # Use linker flags to provide version/build settings to the target
