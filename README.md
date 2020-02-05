@@ -17,8 +17,8 @@ This tool allows you to use [onelogin](https://www.onelogin.com/) to assume an A
 Just download the latest release under https://github.com/glnds/masl/releases. Don't forget to make it executable and link it from somewhere in your $PATH on UNIX-like platforms.
 
 #### OS X
-- Copy the file **masl-vx.x.x-darwin-amd64** to /usr/local/bin and rename it to **masl**: ```sudo mv ~/Downloads/masl-vx.x.x-darwin-amd64 /usr/local/bin/```
-- make it executable: ```sudo chmod +x masl```
+- Open Masl.dmg
+- Move the file **masl-vx.x.x-darwin-amd64** to /usr/local/bin and rename it to **masl**.
 - done :)
 
 #### Windows
