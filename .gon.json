@@ -1,5 +1,5 @@
 {
-    "source" : ["./release/masl-v2.0.1-darwin-amd64"],
+    "source" : ["./release/masl-v2.0.2-darwin-amd64"],
     "bundle_id" : "be.pixxis.masl",
     "apple_id": {
         "username" : "leenders.gert@gmail.com",

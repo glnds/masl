@@ -349,6 +349,9 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 				log.Fatal(err)
 			}
 			emptyFile.Close()
+			if err := os.Chmod(filename, 0600); err != nil {
+				log.Fatal(err)
+			}
 			log.Info("AWS credentials file created.")
 		}
 	}
