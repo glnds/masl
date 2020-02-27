@@ -3,10 +3,7 @@
 project_name: masl
 before:
   hooks:
-    # you may remove this if you don't use vgo
     - go mod download
-    # you may remove this if you don't need go generate
-    - go generate ./...
 builds:
 -
   main: ./cmd/masl/masl.go
