@@ -45,3 +45,8 @@ install:
 # run "make release -j3
 release: windows linux darwin
 .PHONY: release
+
+# LDFLAGS are parsed by goreleaser
+# Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`
+goreleaser:
+.PHONY: goreleaser
