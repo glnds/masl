@@ -1,5 +1,5 @@
 {
-    "source" : ["./release/masl-v2.0.2-darwin-amd64"],
+    "source" : ["./dist/build-osx_darwin_amd64/masl"],
     "bundle_id" : "be.pixxis.masl",
     "apple_id": {
         "username" : "leenders.gert@gmail.com",
@@ -9,7 +9,7 @@
         "application_identity" : "724B07878522FBBD602EEFA7833EB66DDBD4AB39"
     },
     "dmg" :{
-        "output_path":  "./release/masl.dmg",
+        "output_path":  "./dist/masl.dmg",
         "volume_name":  "Masl"
     }
 }

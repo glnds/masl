@@ -34,19 +34,34 @@ lint:
 	golangci-lint run
 .PHONY: lint
 
-$(PLATFORMS):
-	mkdir -p release
-	GOOS=$(os) GOARCH=amd64 go build $(LDFLAGS) -o release/$(BINARY)-v$(VERSION)-$(os)-amd64 cmd/masl/masl.go
-.PHONY: $(PLATFORMS)
+# $(PLATFORMS):
+# 	mkdir -p release
+# 	GOOS=$(os) GOARCH=amd64 go build $(LDFLAGS) -o release/$(BINARY)-v$(VERSION)-$(os)-amd64 cmd/masl/masl.go
+# .PHONY: $(PLATFORMS)
+
+# # run "make release -j3
+# release: windows linux darwin
+# .PHONY: release
 
 install:
 	@go install $(LDFLAGS) cmd/masl/masl.go
 
-# run "make release -j3
-release: windows linux darwin
-.PHONY: release
-
 # LDFLAGS are parsed by goreleaser
 # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`
-goreleaser:
-.PHONY: goreleaser
+release:
+	@goreleaser $(GORELEASER_ARGS)
+.PHONY: release
+
+snapshot: GORELEASER_ARGS= --rm-dist --snapshot
+snapshot: release
+.PHONY: snapshot
+
+todo:
+	@grep \
+		--exclude-dir=vendor \
+		--exclude-dir=dist \
+		--exclude-dir=Attic \
+		--exclude=Makefile \
+		--text \
+		--color \
+		-nRo -E 'TODO:.*' .
