@@ -19,7 +19,7 @@ clean:
 	go clean cmd/masl/masl.go
 	rm -f masl
 	rm -f masl.exe
-	# rm -rf dist/
+	rm -rf dist/
 .PHONY: clean
 
 build:

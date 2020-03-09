@@ -44,7 +44,7 @@ signs:
     cmd: gon
     args:
       - .gon.json
-    artifacts: all
+    artifacts: checksum
 
 archives:
   - id: binaries
