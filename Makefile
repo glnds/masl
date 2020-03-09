@@ -16,10 +16,10 @@ os = $(word 1, $@)
 PKGS := $(shell go list ./... | grep -v /vendor)
 
 clean:
-	go clean
+	go clean cmd/masl/masl.go
 	rm -f masl
 	rm -f masl.exe
-	rm -rf release/
+	# rm -rf dist/
 .PHONY: clean
 
 build:
@@ -48,7 +48,7 @@ install:
 
 # LDFLAGS are parsed by goreleaser
 # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`
-release:
+release: clean
 	@goreleaser $(GORELEASER_ARGS)
 .PHONY: release
 
