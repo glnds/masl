@@ -44,7 +44,7 @@ signs:
     cmd: gon
     args:
       - .gon.json
-    artifacts: checksum
+    artifacts: all
 
 archives:
   - id: binaries
@@ -65,3 +65,9 @@ archives:
       windows: Windows
       386: i386
       amd64: x86_64
+
+release:
+  ids:
+    - none
+  extra_files:
+    - glob: ./dist/masl.dmg
