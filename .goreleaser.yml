@@ -22,9 +22,6 @@ builds:
     env:
       - CGO_ENABLED=0
 
-# checksum:
-#   name_template: 'checksums.txt'
-
 snapshot:
   name_template: "{{ .Tag }}-next"
 
@@ -71,3 +68,9 @@ release:
     - archives
   extra_files:
     - glob: ./dist/masl.dmg
+
+brews:
+  - github:
+      owner: glnds
+      name: masl
+    description: "Assume an AWS Role using Onelogin."
