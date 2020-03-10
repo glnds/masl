@@ -71,3 +71,5 @@ release:
     - none
   extra_files:
     - glob: ./dist/masl.dmg
+    - glob: ./dist/*.zip
+    - glob: ./dist/*.tar.gz
