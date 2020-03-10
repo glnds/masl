@@ -66,12 +66,19 @@ archives:
       386: i386
       amd64: x86_64
 
-release:
-  ids:
-    - binaries
-    - archives
+# release:
+#   ids:
+#     - binaries
+#     - archives
   # extra_files:
   #   - glob: ./dist/masl.dmg
+    # - glob: ./dist/*.zip
+    # - glob: ./dist/*.tar.gz
+release:
+  ids:
+    - archives
+  extra_files:
+    - glob: ./dist/masl.dmg
     # - glob: ./dist/*.zip
     # - glob: ./dist/*.tar.gz
 
