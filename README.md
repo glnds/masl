@@ -1,4 +1,5 @@
 [![Release](https://img.shields.io/github/release/glnds/masl.svg?style=flat)](https://github.com/glnds/masl/releases/latest)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](/LICENSE)
 [![CircleCI](https://circleci.com/gh/glnds/masl.svg?style=svg)](https://circleci.com/gh/glnds/masl)
 [![Go Report Card](https://goreportcard.com/badge/github.com/glnds/masl)](https://goreportcard.com/report/github.com/glnds/masl)
 
