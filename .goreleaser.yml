@@ -68,8 +68,17 @@ archives:
 
 release:
   ids:
-    - none
-  extra_files:
-    - glob: ./dist/masl.dmg
-    - glob: ./dist/*.zip
-    - glob: ./dist/*.tar.gz
+    - binaries
+    - archives
+  # extra_files:
+  #   - glob: ./dist/masl.dmg
+    # - glob: ./dist/*.zip
+    # - glob: ./dist/*.tar.gz
+
+# release:
+#   ids:
+#     - none
+#   extra_files:
+#     - glob: ./dist/masl.dmg
+#     - glob: ./dist/*.zip
+#     - glob: ./dist/*.tar.gz
