@@ -56,7 +56,7 @@ func main() {
 	logger.SetLevel(logrus.InfoLevel)
 
 	// 2. Read config file
-	conf := masl.GetConfig(logger)
+	conf := masl.GetConfig(usr.HomeDir+string(os.PathSeparator)+".masl"+string(os.PathSeparator)+"config.toml", logger)
 	if conf.Debug {
 		logger.SetLevel(logrus.DebugLevel)
 	}

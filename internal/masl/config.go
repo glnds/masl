@@ -2,8 +2,6 @@ package masl
 
 import (
 	"log"
-	"os"
-	"os/user"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -39,16 +37,11 @@ type Config struct {
 }
 
 // GetConfig reads the .masl/config.toml configuration file for initialization.
-func GetConfig(logger *logrus.Logger) Config {
-
-	usr, err := user.Current()
-	if err != nil {
-		log.Fatal(err)
-	}
+func GetConfig(configFile string, logger *logrus.Logger) Config {
 
 	// Read .masl/config.toml config file for initialization
 	conf := Config{Profile: "masl", LegacyToken: false, Debug: false, Duration: 3600} // Set default values
-	if _, err := toml.DecodeFile(usr.HomeDir+string(os.PathSeparator)+".masl"+string(os.PathSeparator)+"config.toml", &conf); err != nil {
+	if _, err := toml.DecodeFile(configFile, &conf); err != nil {
 		log.Fatal(err.Error())
 	}
 
