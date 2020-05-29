@@ -24,28 +24,10 @@ import (
 
 /* #nosec */
 const (
-	generateTokenAPI = "auth/oauth2/token"
+	// generateTokenAPI = "auth/oauth2/token"
 	samlAssertionAPI = "api/1/saml_assertion"
 	verifyFactorAPI  = "api/1/saml_assertion/verify_factor"
 )
-
-// APITokenResponse represents the OneLogin Generate API Token response
-type APITokenResponse struct {
-	Status struct {
-		Error   bool   `json:"error"`
-		Code    int    `json:"code"`
-		Type    string `json:"type"`
-		Message string `json:"message"`
-	} `json:"status"`
-	Data []struct {
-		AccessToken  string    `json:"access_token"`
-		CreatedAt    time.Time `json:"created_at"`
-		ExpiresIn    int       `json:"expires_in"`
-		RefreshToken string    `json:"refresh_token"`
-		TokenType    string    `json:"token_type"`
-		AccountID    int       `json:"account_id"`
-	} `json:"data"`
-}
 
 // SAMLAssertionRequest represents the OneLogin SAML Assertion request
 type SAMLAssertionRequest struct {
@@ -151,25 +133,6 @@ func logRequest(log *logrus.Logger, req *http.Request) {
 func logResponse(log *logrus.Logger, resp *http.Response) {
 	dump, _ := httputil.DumpResponse(resp, true)
 	log.Debug(string(dump))
-}
-
-// GenerateToken Call to https://developers.onelogin.com/api-docs/1/oauth20-tokens/generate-tokens
-func GenerateToken(conf Config, log *logrus.Logger) string {
-
-	url := conf.BaseURL + generateTokenAPI
-	requestBody := []byte(`{"grant_type":"client_credentials"}`)
-	auth := "client_id:" + conf.ClientID + ",client_secret:" + conf.ClientSecret
-
-	apiToken := APITokenResponse{}
-	httpRequest(url, auth, requestBody, log, &apiToken)
-
-	//TODO: being a bit optimistic here ;)
-	if apiToken.Status.Code != 200 {
-		fmt.Printf("Unable to acquire an OneLogin accesss token (check config.toml): %s\n", apiToken.Status.Message)
-		os.Exit(0)
-	}
-	log.Debug(apiToken)
-	return apiToken.Data[0].AccessToken
 }
 
 // SAMLAssertion Call to https://api.eu.onelogin.com/api/1/saml_assertion

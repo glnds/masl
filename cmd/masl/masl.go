@@ -70,7 +70,12 @@ func main() {
 	accountFilter := initAccountFilter(conf, flags, logger)
 
 	// Generate a new OneLogin API token
-	apiToken := masl.GenerateToken(conf, logger)
+	client := masl.New(conf)
+	apiToken, err := client.GenerateToken()
+	if err != nil {
+		fmt.Printf("\n%s\n", err)
+		logger.Fatal(err)
+	}
 
 	// Ask for the user's password
 	fmt.Print("OneLogin Password: ")
