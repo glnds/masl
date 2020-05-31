@@ -1,0 +1,103 @@
+package masl
+
+// import (
+// 	"bytes"
+// 	"encoding/json"
+// 	"fmt"
+// 	"io/ioutil"
+// 	"net/http"
+// 	"os"
+// 	"time"
+// )
+
+// /* #nosec */
+// const (
+// 	generateTokenAPI = "auth/oauth2/token"
+// )
+
+// // APITokenResponse represents the OneLogin Generate API Token response
+// type APITokenResponse struct {
+// 	Status struct {
+// 		Error   bool   `json:"error"`
+// 		Code    int    `json:"code"`
+// 		Type    string `json:"type"`
+// 		Message string `json:"message"`
+// 	} `json:"status"`
+// 	Data []struct {
+// 		AccessToken  string    `json:"access_token"`
+// 		CreatedAt    time.Time `json:"created_at"`
+// 		ExpiresIn    int       `json:"expires_in"`
+// 		RefreshToken string    `json:"refresh_token"`
+// 		TokenType    string    `json:"token_type"`
+// 		AccountID    int       `json:"account_id"`
+// 	} `json:"data"`
+// }
+
+//var httpClient = &http.Client{Timeout: 10 * time.Second}
+
+//// GenerateToken Call to https://developers.onelogin.com/api-docs/1/oauth20-tokens/generate-tokens
+//func GenerateToken(conf Config, log *logrus.Logger) string {
+
+//	url := conf.BaseURL + generateTokenAPI
+//	requestBody := []byte(`{"grant_type":"client_credentials"}`)
+//	auth := "client_id:" + conf.ClientID + ",client_secret:" + conf.ClientSecret
+
+//	apiToken := APITokenResponse{}
+//	httpRequest(url, auth, requestBody, log, &apiToken)
+
+//	//TODO: being a bit optimistic here ;)
+//	if apiToken.Status.Code != 200 {
+//		fmt.Printf("Unable to acquire an OneLogin accesss token (check config.toml): %s\n", apiToken.Status.Message)
+//		os.Exit(0)
+//	}
+//	log.Debug(apiToken)
+//	return apiToken.Data[0].AccessToken
+//}
+
+//func httpRequest(url string, auth string, jsonStr []byte, log *logrus.Logger, target interface{}) {
+
+//	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+//	if err != nil {
+//		panic(err)
+//	}
+//	req.Header.Set("Authorization", auth)
+//	req.Header.Set("Content-Type", "application/json")
+//	logRequest(log, req)
+
+//	resp, err := httpClient.Do(req)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	defer resp.Body.Close()
+
+//	logResponse(log, resp)
+
+//	if err := json.NewDecoder(resp.Body).Decode(target); err != nil {
+//		log.Fatalln(err)
+//	}
+//}
+
+//func httpRequestRaw(url string, auth string, jsonStr []byte, log *logrus.Logger) []byte {
+
+//	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+//	if err != nil {
+//		panic(err)
+//	}
+//	req.Header.Set("Authorization", auth)
+//	req.Header.Set("Content-Type", "application/json")
+//	logRequest(log, req)
+
+//	resp, err := httpClient.Do(req)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	defer resp.Body.Close()
+
+//	logResponse(log, resp)
+
+//	body, err := ioutil.ReadAll(resp.Body)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	return body
+//}
