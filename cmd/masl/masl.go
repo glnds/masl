@@ -37,7 +37,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	// 1. Create the logger file if doesn't exist. Append to it if it already exists.
+	// Create the logger file if doesn't exist. Append to it if it already exists.
 	var filename = "masl.log"
 	file, err := os.OpenFile(usr.HomeDir+string(os.PathSeparator)+".masl"+string(os.PathSeparator)+filename,
 		os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
@@ -55,13 +55,13 @@ func main() {
 	logger.Info("------------------ w00t w00t masl for you!?  ------------------")
 	logger.SetLevel(logrus.InfoLevel)
 
-	// 2. Read config file
+	// Read config file
 	conf := masl.GetConfig(usr.HomeDir+string(os.PathSeparator)+".masl"+string(os.PathSeparator)+"config.toml", logger)
 	if conf.Debug {
 		logger.SetLevel(logrus.DebugLevel)
 	}
 
-	// 3. Read the command line flags
+	// Read the command line flags
 	flags := parseFlags(conf)
 	logger.WithFields(logrus.Fields{
 		"flags": flags,
@@ -69,9 +69,9 @@ func main() {
 
 	accountFilter := initAccountFilter(conf, flags, logger)
 
-	// Generate a new OneLogin API token
-	client := masl.New(conf)
-	apiToken, err := client.GenerateToken()
+	// Create a new OneLogin Client and initialize it with an API token
+	onelogin := masl.NewOneloginClient(conf)
+	err = onelogin.InitApiToken()
 	if err != nil {
 		fmt.Printf("\n%s\n", err)
 		logger.Fatal(err)
@@ -83,7 +83,7 @@ func main() {
 	password := string(bytePassword)
 
 	// OneLogin SAML assertion API call
-	samlAssertionData, err := masl.SAMLAssertion(conf, logger, password, apiToken)
+	samlAssertionData, err := onelogin.SAMLAssertion(logger, password)
 	if err != nil {
 		fmt.Printf("\n%s\n", err)
 		logger.Fatal(err)
@@ -102,8 +102,7 @@ func main() {
 			fmt.Printf("Enter your %s one-time password: ", device.DeviceType)
 		}
 		otp, _ := reader.ReadString('\n')
-		samlData, err = masl.VerifyMFA(conf, logger, device.DeviceID, samlAssertionData.StateToken,
-			otp, apiToken)
+		samlData, err = onelogin.VerifyMFA(logger, device.DeviceID, samlAssertionData.StateToken, otp)
 		// OneLogin Verify MFA API call
 		if err != nil {
 			fmt.Println(err)
