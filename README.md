@@ -127,9 +127,9 @@ Assure the environment variable ```AWS_PROFILE``` is set to **masl** (or the ove
 
 ### Non-interactive usage
 
-If you use command line tools to manage your passwords and generate otp tokens then you can pipe credentials to masl. When piping masl expects three lines. The first is your password, the second line the otp token and the third line the role you want to select.
+If you use command line tools to manage your passwords and generate otp tokens then you can pipe credentials to masl. Masl expects three lines. The first line should be your password, the second line the otp token and the third line the role you want to select.
 
-For example if you use [pass](https://www.passwordstore.org/) to manage your passwords and [totp-cli](https://github.com/WhyNotHugo/totp-cli) to generate tokens, then you can write a script like this
+For example if you use [pass](https://www.passwordstore.org/) to manage your passwords and [totp-cli](https://github.com/WhyNotHugo/totp-cli) to generate tokens, then you can write a script like this:
 ```
 #!/usr/bin/env bash
 
