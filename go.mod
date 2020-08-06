@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/BurntSushi/toml v0.3.1
+	github.com/andrew-d/go-termutil v0.0.0-20150726205930-009166a695a2
 	github.com/aws/aws-sdk-go v1.29.19
 	github.com/edaniels/go-saml v0.0.0-20160724042625-8c877c3ab101
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect

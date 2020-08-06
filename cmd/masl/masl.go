@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/andrew-d/go-termutil"
 	"github.com/glnds/masl/internal/masl"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
@@ -72,10 +73,42 @@ func main() {
 	// Generate a new OneLogin API token
 	apiToken := masl.GenerateToken(conf, logger)
 
-	// Ask for the user's password
-	fmt.Print("OneLogin Password: ")
-	bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin)) // nolint
-	password := string(bytePassword)
+	reader := bufio.NewReader(os.Stdin)
+	var password string
+	var otp string
+	var roleNr int
+
+	if !termutil.Isatty(os.Stdin.Fd()) {
+		fmt.Println("Reading auth info from STDIN")
+		password, err = reader.ReadString('\n')
+		if err != nil || password == "\n" {
+			fmt.Println("Expected three non-empty lines from STDIN (password, otp token, role number)")
+			logger.Fatal(err)
+		}
+		otp, err = reader.ReadString('\n')
+		if err != nil || otp == "\n" {
+			fmt.Println("Expected three non-empty lines from STDIN (password, otp token, role number)")
+			logger.Fatal(err)
+		}
+		roleNrRead, err := reader.ReadString('\n')
+		if err != nil || roleNrRead == "\n" {
+			fmt.Println("Expected three non-empty lines from STDIN (password, otp token, role number)")
+			logger.Fatal(err)
+		}
+		roleNr, err = strconv.Atoi(strings.TrimRight(roleNrRead, "\r\n"))
+		if err != nil || roleNr < 1 {
+			fmt.Println("Expected last line from STDIN to be int > 0")
+			logger.Fatal(err)
+		}
+		fmt.Printf("otp token: %srole number: %d", otp, roleNr)
+	}
+
+	if password == "" {
+		// Ask for the user's password
+		fmt.Print("OneLogin Password: ")
+		bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin)) // nolint
+		password = string(bytePassword)
+	}
 
 	// OneLogin SAML assertion API call
 	samlAssertionData, err := masl.SAMLAssertion(conf, logger, password, apiToken)
@@ -83,8 +116,6 @@ func main() {
 		fmt.Printf("\n%s\n", err)
 		logger.Fatal(err)
 	}
-
-	reader := bufio.NewReader(os.Stdin)
 
 	var samlData string
 	if samlAssertionData.MFARequired {
@@ -96,7 +127,9 @@ func main() {
 		} else {
 			fmt.Printf("Enter your %s one-time password: ", device.DeviceType)
 		}
-		otp, _ := reader.ReadString('\n')
+		if otp == "" {
+			otp, _ = reader.ReadString('\n')
+		}
 		samlData, err = masl.VerifyMFA(conf, logger, device.DeviceID, samlAssertionData.StateToken,
 			otp, apiToken)
 		// OneLogin Verify MFA API call
@@ -115,7 +148,14 @@ func main() {
 		fmt.Println("No  masl for you! You don't have permissions to any account!")
 		os.Exit(0)
 	}
-	role := selectRole(roles)
+
+	var role *masl.SAMLAssertionRole
+	if roleNr == 0 {
+		role = selectRole(roles)
+	} else {
+		role = roles[roleNr-1]
+	}
+
 	awsAuthenticate(samlData, conf, role, usr.HomeDir, flags)
 }
 
