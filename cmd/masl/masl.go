@@ -72,10 +72,13 @@ func main() {
 	// Generate a new OneLogin API token
 	apiToken := masl.GenerateToken(conf, logger)
 
-	// Ask for the user's password
-	fmt.Print("OneLogin Password: ")
-	bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin)) // nolint
-	password := string(bytePassword)
+	password := os.Getenv("PASSWORD")
+	if password == "" {
+		// Ask for the user's password
+		fmt.Print("OneLogin Password: ")
+		bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin)) // nolint
+		password = string(bytePassword)
+	}
 
 	// OneLogin SAML assertion API call
 	samlAssertionData, err := masl.SAMLAssertion(conf, logger, password, apiToken)
@@ -90,13 +93,16 @@ func main() {
 	if samlAssertionData.MFARequired {
 		fmt.Print("\n")
 		device := selectMFADevice(samlAssertionData.Devices, conf.DefaulMFADevice)
-		// Ask for a new otp
-		if strings.Contains(strings.ToLower(device.DeviceType), "yubikey") {
-			fmt.Printf("Enter your YubiKey security code: ")
-		} else {
-			fmt.Printf("Enter your %s one-time password: ", device.DeviceType)
+		otp := os.Getenv("OTP")
+		if otp == "" {
+			// Ask for a new otp
+			if strings.Contains(strings.ToLower(device.DeviceType), "yubikey") {
+				fmt.Printf("Enter your YubiKey security code: ")
+			} else {
+				fmt.Printf("Enter your %s one-time password: ", device.DeviceType)
+			}
+			otp, _ = reader.ReadString('\n')
 		}
-		otp, _ := reader.ReadString('\n')
 		samlData, err = masl.VerifyMFA(conf, logger, device.DeviceID, samlAssertionData.StateToken,
 			otp, apiToken)
 		// OneLogin Verify MFA API call

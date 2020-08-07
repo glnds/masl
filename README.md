@@ -125,6 +125,14 @@ Optional command line arguments:
 
 Assure the environment variable ```AWS_PROFILE``` is set to **masl** (or the overrided value specified in ```.masl/config.toml``` or the ```-profile``` command line option).
 
+### Non-interactive usage
+If you use command line tools to manage your passwords and generate otp tokens then you can set environment variables for the password and otp token. 
+For example if you use [pass](https://www.passwordstore.org/) to manage your passwords and [totp-cli](https://github.com/WhyNotHugo/totp-cli) to generate tokens, then you can write a script like this:
+```
+#!/usr/bin/env bash
+PASSWORD=$(pass <the-service>) OTP=$(totp <the-service>) masl
+```
+
 ## Development
 
 ### Makefile
