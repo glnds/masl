@@ -6,7 +6,7 @@
         "password":  "@env:AC_PASSWORD"
     },
     "sign" :{
-        "application_identity" : "724B07878522FBBD602EEFA7833EB66DDBD4AB39"
+        "application_identity" : "95238E61BD2422C5223B760FED94E77A22C0A42B"
     },
     "dmg" :{
         "output_path":  "./dist/masl.dmg",
