@@ -20,8 +20,8 @@ var logger = logrus.New()
 
 var version, build string
 
-// CLIFlags represents the command line flags
-type CLIFlags struct {
+// Flags represents the command line flags
+type Flags struct {
 	Version     bool
 	LegacyToken bool
 	Profile     string
@@ -31,13 +31,68 @@ type CLIFlags struct {
 }
 
 func main() {
-
 	usr, err := user.Current()
 	if err != nil {
 		logger.Fatal(err)
 	}
+	password := os.Getenv("PASSWORD")
+	if password == "" {
+		// Ask for the user's password
+		fmt.Print("OneLogin Password: ")
+		bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin)) // nolint
+		password = string(bytePassword)
+	}
 
-	// 1. Create the logger file if doesn't exist. Append to it if it already exists.
+	logger, file := InitializeLogger(usr)
+	defer file.Close()
+	conf := LoadConfig(logger)
+	flags := parseCliFlags(conf)
+	DoMasl(conf, flags, logger, password, usr)
+}
+
+func DoMasl(conf masl.Config, flags Flags, logger *logrus.Logger, password string, usr *user.User) {
+	accountFilter := initAccountFilter(conf, flags, logger)
+	// Generate a new OneLogin API token
+	apiToken := masl.GenerateToken(conf, logger)
+
+	// OneLogin SAML assertion API call
+	samlAssertionData, err := masl.SAMLAssertion(conf, logger, password, apiToken)
+	if err != nil {
+		fmt.Printf("\n%s\n", err)
+		logger.Fatal(err)
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	samlData := ReadSamlData(samlAssertionData, conf, reader, apiToken)
+
+	// Print all SAMLAssertion Roles
+	roles := masl.ParseSAMLAssertion(samlData, conf.Accounts, logger, accountFilter, flags.Role)
+	if len(roles) == 0 {
+		fmt.Println("No  masl for you! You don't have permissions to any account!")
+		os.Exit(0)
+	}
+	role := selectRole(roles)
+	awsAuthenticate(samlData, conf, role, usr.HomeDir, flags)
+}
+
+func LoadConfig(logger *logrus.Logger) masl.Config {
+	conf := masl.GetConfig(logger)
+	if conf.Debug {
+		logger.SetLevel(logrus.DebugLevel)
+	}
+	return conf
+}
+
+func parseCliFlags(conf masl.Config) Flags {
+	flags := parseFlags(conf)
+	logger.WithFields(logrus.Fields{
+		"flags": flags,
+	}).Info("Parsed the commandline flags")
+	return flags
+}
+
+func InitializeLogger(usr *user.User) (*logrus.Logger, *os.File) {
+	// Create the logger file if doesn't exist. Append to it if it already exists.
 	var filename = "masl.log"
 	file, err := os.OpenFile(usr.HomeDir+string(os.PathSeparator)+".masl"+string(os.PathSeparator)+filename,
 		os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
@@ -50,46 +105,15 @@ func main() {
 	} else {
 		logger.Info("Failed to log to file, using default stderr")
 	}
-	defer file.Close()
 
 	logger.Info("------------------ w00t w00t masl for you!?  ------------------")
 	logger.SetLevel(logrus.InfoLevel)
+	return logger, file
+}
 
-	// 2. Read config file
-	conf := masl.GetConfig(logger)
-	if conf.Debug {
-		logger.SetLevel(logrus.DebugLevel)
-	}
-
-	// 3. Read the command line flags
-	flags := parseFlags(conf)
-	logger.WithFields(logrus.Fields{
-		"flags": flags,
-	}).Info("Parsed the commandline flags")
-
-	accountFilter := initAccountFilter(conf, flags, logger)
-
-	// Generate a new OneLogin API token
-	apiToken := masl.GenerateToken(conf, logger)
-
-	password := os.Getenv("PASSWORD")
-	if password == "" {
-		// Ask for the user's password
-		fmt.Print("OneLogin Password: ")
-		bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin)) // nolint
-		password = string(bytePassword)
-	}
-
-	// OneLogin SAML assertion API call
-	samlAssertionData, err := masl.SAMLAssertion(conf, logger, password, apiToken)
-	if err != nil {
-		fmt.Printf("\n%s\n", err)
-		logger.Fatal(err)
-	}
-
-	reader := bufio.NewReader(os.Stdin)
-
+func ReadSamlData(samlAssertionData masl.SAMLAssertionData, conf masl.Config, reader *bufio.Reader, apiToken string) string {
 	var samlData string
+	var err error
 	if samlAssertionData.MFARequired {
 		fmt.Print("\n")
 		device := selectMFADevice(samlAssertionData.Devices, conf.DefaulMFADevice)
@@ -114,19 +138,11 @@ func main() {
 		fmt.Println()
 		samlData = samlAssertionData.Data
 	}
-
-	// Print all SAMLAssertion Roles
-	roles := masl.ParseSAMLAssertion(samlData, conf.Accounts, logger, accountFilter, flags.Role)
-	if len(roles) == 0 {
-		fmt.Println("No  masl for you! You don't have permissions to any account!")
-		os.Exit(0)
-	}
-	role := selectRole(roles)
-	awsAuthenticate(samlData, conf, role, usr.HomeDir, flags)
+	return samlData
 }
 
 func awsAuthenticate(samlData string, conf masl.Config, role *masl.SAMLAssertionRole,
-	homeDir string, flags CLIFlags) {
+	homeDir string, flags Flags) {
 	assertionOutput := masl.AssumeRole(samlData, int64(conf.Duration), role, logger)
 	masl.SetCredentials(assertionOutput, homeDir, flags.Profile, flags.LegacyToken, logger)    //profile
 	masl.SetCredentials(assertionOutput, homeDir, role.AccountName, flags.LegacyToken, logger) // account name
@@ -151,8 +167,8 @@ func awsAuthenticate(samlData string, conf masl.Config, role *masl.SAMLAssertion
 	}
 }
 
-func parseFlags(conf masl.Config) CLIFlags {
-	flags := new(CLIFlags)
+func parseFlags(conf masl.Config) Flags {
+	flags := new(Flags)
 
 	flag.BoolVar(&flags.Version, "version", false, "prints MASL version")
 	flag.BoolVar(&flags.LegacyToken, "legacy-token", conf.LegacyToken,
@@ -171,7 +187,7 @@ func parseFlags(conf masl.Config) CLIFlags {
 	return *flags
 }
 
-func initAccountFilter(conf masl.Config, flags CLIFlags, log *logrus.Logger) []string {
+func initAccountFilter(conf masl.Config, flags Flags, log *logrus.Logger) []string {
 
 	var accountFilter []string
 	if flags.Account != "" {
