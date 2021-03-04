@@ -165,7 +165,7 @@ func GenerateToken(conf Config, log *logrus.Logger) string {
 
 	//TODO: being a bit optimistic here ;)
 	if apiToken.Status.Code != 200 {
-		fmt.Printf("Unable to acquire an OneLogin accesss token (check config.toml): %s\n", apiToken.Status.Message)
+		fmt.Printf("Unable to acquire an OneLogin access token (check config.toml): %s\n", apiToken.Status.Message)
 		os.Exit(0)
 	}
 	log.Debug(apiToken)
