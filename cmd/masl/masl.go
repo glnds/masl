@@ -36,10 +36,10 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	logger, file := InitializeLogger(usr)
+	logger, file := initializeLogger(usr)
 	defer file.Close()
 
-	conf := LoadConfig(logger)
+	conf := loadConfig(logger)
 	flags := parseCliFlags(conf)
 
 	password := os.Getenv("PASSWORD")
@@ -53,6 +53,7 @@ func main() {
 	DoMasl(conf, flags, logger, password, usr)
 }
 
+// DoMASL Allow other tools to integrate with Masl to assume an AWS role
 func DoMasl(conf masl.Config, flags Flags, logger *logrus.Logger, password string, usr *user.User) {
 	accountFilter := initAccountFilter(conf, flags, logger)
 	// Generate a new OneLogin API token
@@ -66,7 +67,7 @@ func DoMasl(conf masl.Config, flags Flags, logger *logrus.Logger, password strin
 	}
 
 	reader := bufio.NewReader(os.Stdin)
-	samlData := ReadSamlData(samlAssertionData, conf, reader, apiToken)
+	samlData := readSamlData(samlAssertionData, conf, reader, apiToken)
 
 	// Print all SAMLAssertion Roles
 	roles := masl.ParseSAMLAssertion(samlData, conf.Accounts, logger, accountFilter, flags.Role)
@@ -78,7 +79,7 @@ func DoMasl(conf masl.Config, flags Flags, logger *logrus.Logger, password strin
 	awsAuthenticate(samlData, conf, role, usr.HomeDir, flags)
 }
 
-func LoadConfig(logger *logrus.Logger) masl.Config {
+func loadConfig(logger *logrus.Logger) masl.Config {
 	conf := masl.GetConfig(logger)
 	if conf.Debug {
 		logger.SetLevel(logrus.DebugLevel)
@@ -94,7 +95,7 @@ func parseCliFlags(conf masl.Config) Flags {
 	return flags
 }
 
-func InitializeLogger(usr *user.User) (*logrus.Logger, *os.File) {
+func initializeLogger(usr *user.User) (*logrus.Logger, *os.File) {
 	// Create the logger file if doesn't exist. Append to it if it already exists.
 	var filename = "masl.log"
 	file, err := os.OpenFile(usr.HomeDir+string(os.PathSeparator)+".masl"+string(os.PathSeparator)+filename,
@@ -114,7 +115,7 @@ func InitializeLogger(usr *user.User) (*logrus.Logger, *os.File) {
 	return logger, file
 }
 
-func ReadSamlData(samlAssertionData masl.SAMLAssertionData, conf masl.Config, reader *bufio.Reader, apiToken string) string {
+func readSamlData(samlAssertionData masl.SAMLAssertionData, conf masl.Config, reader *bufio.Reader, apiToken string) string {
 	var samlData string
 	var err error
 	if samlAssertionData.MFARequired {
