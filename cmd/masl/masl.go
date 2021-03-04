@@ -13,7 +13,7 @@ import (
 
 	"github.com/glnds/masl/internal/masl"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 var logger = logrus.New()
@@ -46,7 +46,7 @@ func main() {
 	if password == "" {
 		// Ask for the user's password
 		fmt.Print("OneLogin Password: ")
-		bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin)) // nolint
+		bytePassword, _ := term.ReadPassword(int(syscall.Stdin)) // nolint
 		password = string(bytePassword)
 	}
 
