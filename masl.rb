@@ -5,13 +5,13 @@
 class Masl < Formula
   desc "Assume an AWS Role using Onelogin."
   homepage ""
-  version "2.0.6"
+  version "2.0.7"
   bottle :unneeded
   depends_on :linux
 
   if OS.linux? && Hardware::CPU.intel?
-    url "https://github.com/glnds/masl/releases/download/v2.0.6/masl_2.0.6_Linux_x86_64.tar.gz"
-    sha256 "986846f2581328253f92be1bf35a49682bb7c49621497a8640c15ef53b63d145"
+    url "https://github.com/glnds/masl/releases/download/v2.0.7/masl_2.0.7_Linux_x86_64.tar.gz"
+    sha256 "fec9e8d05f268b81115b9c07849e87e40da71cf817f10aaf26b397b42e9257f8"
   end
 
   def install
