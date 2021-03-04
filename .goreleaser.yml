@@ -70,7 +70,7 @@ release:
     - glob: ./dist/masl.dmg
 
 brews:
-  - github:
+  - description: "Assume an AWS Role using Onelogin."
+    tap:
       owner: glnds
       name: masl
-    description: "Assume an AWS Role using Onelogin."
