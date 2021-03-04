@@ -8,7 +8,7 @@ BINARY := masl
 BUILD := `git rev-parse HEAD`
 
 # Use linker flags to provide version/build settings to the target
-LDFLAGS=-ldflags "-X=main.version=$(VERSION) -X=main.build=$(BUILD)"
+LDFLAGS=-ldflags "-X=main.build=$(BUILD)"
 
 os = $(word 1, $@)
 

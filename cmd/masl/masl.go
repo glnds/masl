@@ -18,7 +18,7 @@ import (
 
 var logger = logrus.New()
 
-var version, build string
+var version, build, commit, date string
 
 // Flags represents the command line flags
 type Flags struct {
@@ -35,6 +35,13 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
+
+	logger, file := InitializeLogger(usr)
+	defer file.Close()
+
+	conf := LoadConfig(logger)
+	flags := parseCliFlags(conf)
+
 	password := os.Getenv("PASSWORD")
 	if password == "" {
 		// Ask for the user's password
@@ -43,10 +50,6 @@ func main() {
 		password = string(bytePassword)
 	}
 
-	logger, file := InitializeLogger(usr)
-	defer file.Close()
-	conf := LoadConfig(logger)
-	flags := parseCliFlags(conf)
 	DoMasl(conf, flags, logger, password, usr)
 }
 
@@ -181,7 +184,11 @@ func parseFlags(conf masl.Config) Flags {
 	flag.Parse()
 
 	if flags.Version {
-		fmt.Printf("masl version: %s, build: %s\n", version, build)
+		if version == "" {
+			fmt.Printf("masl build: %s\n", build)
+		} else {
+			fmt.Printf("masl version: %s, commit: %s, date: %s\n", version, commit, date)
+		}
 		os.Exit(0)
 	}
 	return *flags
