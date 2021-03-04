@@ -53,7 +53,7 @@ func main() {
 	DoMasl(conf, flags, logger, password, usr)
 }
 
-// DoMASL Allow other tools to integrate with Masl to assume an AWS role
+// DoMasl Allow other tools to integrate with Masl to assume an AWS role
 func DoMasl(conf masl.Config, flags Flags, logger *logrus.Logger, password string, usr *user.User) {
 	accountFilter := initAccountFilter(conf, flags, logger)
 	// Generate a new OneLogin API token
