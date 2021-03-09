@@ -30,17 +30,12 @@ type Flags struct {
 }
 
 func main() {
-	usr, err := user.Current()
-	if err != nil {
-		fmt.Println("\n%s", err.Error)
-		os.Exit(1)
-	}
 
 	logger.Info("------------------ w00t w00t masl for you!?  ------------------")
 
 	conf := masl.GetConfig()
 	if conf.Debug {
-		//TODO: implement
+		//TODO: implememt
 	}
 
 	flags := parseFlags(conf)
@@ -54,11 +49,11 @@ func main() {
 		password = string(bytePassword)
 	}
 
-	DoMasl(conf, flags, password, usr)
+	DoMasl(conf, flags, password)
 }
 
 // DoMasl Allow other tools to integrate with Masl to assume an AWS role
-func DoMasl(conf masl.Config, flags Flags, password string, usr *user.User) {
+func DoMasl(conf masl.Config, flags Flags, password string) {
 	accountFilter := initAccountFilter(conf, flags)
 	// Generate a new OneLogin API token
 	apiToken := masl.GenerateToken(conf)
@@ -80,7 +75,7 @@ func DoMasl(conf masl.Config, flags Flags, password string, usr *user.User) {
 		os.Exit(0)
 	}
 	role := selectRole(roles)
-	awsAuthenticate(samlData, conf, role, usr.HomeDir, flags)
+	awsAuthenticate(samlData, conf, role, flags)
 }
 
 func readSamlData(samlAssertionData masl.SAMLAssertionData, conf masl.Config, reader *bufio.Reader, apiToken string) string {
@@ -114,10 +109,17 @@ func readSamlData(samlAssertionData masl.SAMLAssertionData, conf masl.Config, re
 }
 
 func awsAuthenticate(samlData string, conf masl.Config, role *masl.SAMLAssertionRole,
-	homeDir string, flags Flags) {
+	flags Flags) {
+
+	usr, err := user.Current()
+	if err != nil {
+		fmt.Printf("\n%s", err.Error())
+		os.Exit(1)
+	}
+
 	assertionOutput := masl.AssumeRole(samlData, int64(conf.Duration), role)
-	masl.SetCredentials(assertionOutput, homeDir, flags.Profile, flags.LegacyToken)    //profile
-	masl.SetCredentials(assertionOutput, homeDir, role.AccountName, flags.LegacyToken) // account name
+	masl.SetCredentials(assertionOutput, usr.HomeDir, flags.Profile, flags.LegacyToken)    //profile
+	masl.SetCredentials(assertionOutput, usr.HomeDir, role.AccountName, flags.LegacyToken) // account name
 
 	logger.Info("w00t w00t masl for you!, Successfully authenticated.")
 

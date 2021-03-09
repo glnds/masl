@@ -365,7 +365,6 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
-	logger.Info("AWS credentials file loaded.")
 
 	sec := cfg.Section(profileName)
 	if _, err := sec.NewKey("aws_access_key_id", *assertionOutput.Credentials.AccessKeyId); err != nil {
@@ -385,6 +384,7 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 		sec.DeleteKey("aws_security_token")
 	}
 	err = cfg.SaveTo(filename)
+	logger.Sugar().Infof("AWS credentials saved to file for profile [%s].", profileName)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
