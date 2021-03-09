@@ -36,7 +36,7 @@ type Config struct {
 	Accounts Accounts `toml:"Accounts"`
 }
 
-var logger = GetInstance()
+var logger = GetLogger("info")
 
 // GetConfig reads the .masl/config.toml configuration file for initialization.
 func GetConfig() Config {

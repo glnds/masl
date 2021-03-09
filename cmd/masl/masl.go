@@ -12,10 +12,11 @@ import (
 	"strings"
 
 	"github.com/glnds/masl/internal/masl"
+	"go.uber.org/zap"
 	"golang.org/x/term"
 )
 
-var logger = masl.GetInstance()
+var logger *zap.Logger
 
 var version, build, commit, date string
 
@@ -31,12 +32,14 @@ type Flags struct {
 
 func main() {
 
-	logger.Info("------------------ w00t w00t masl for you!?  ------------------")
-
 	conf := masl.GetConfig()
 	if conf.Debug {
-		//TODO: implememt
+		logger = masl.GetLogger("debug")
+	} else {
+		logger = masl.GetLogger("info")
 	}
+
+	logger.Info("------------------ w00t w00t masl for you!?  ------------------")
 
 	flags := parseFlags(conf)
 	logger.Info("Parsed the commandline flags")
