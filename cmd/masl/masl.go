@@ -12,11 +12,10 @@ import (
 	"strings"
 
 	"github.com/glnds/masl/internal/masl"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/term"
 )
 
-var logger = logrus.New()
+var logger = masl.GetInstance()
 
 var version, build, commit, date string
 
@@ -33,14 +32,19 @@ type Flags struct {
 func main() {
 	usr, err := user.Current()
 	if err != nil {
-		logger.Fatal(err)
+		fmt.Println("\n%s", err.Error)
+		os.Exit(1)
 	}
 
-	logger, file := initializeLogger(usr)
-	defer file.Close()
+	logger.Info("------------------ w00t w00t masl for you!?  ------------------")
 
-	conf := loadConfig(logger)
-	flags := parseCliFlags(conf)
+	conf := masl.GetConfig()
+	if conf.Debug {
+		//TODO: implement
+	}
+
+	flags := parseFlags(conf)
+	logger.Info("Parsed the commandline flags")
 
 	password := os.Getenv("PASSWORD")
 	if password == "" {
@@ -50,69 +54,33 @@ func main() {
 		password = string(bytePassword)
 	}
 
-	DoMasl(conf, flags, logger, password, usr)
+	DoMasl(conf, flags, password, usr)
 }
 
 // DoMasl Allow other tools to integrate with Masl to assume an AWS role
-func DoMasl(conf masl.Config, flags Flags, logger *logrus.Logger, password string, usr *user.User) {
-	accountFilter := initAccountFilter(conf, flags, logger)
+func DoMasl(conf masl.Config, flags Flags, password string, usr *user.User) {
+	accountFilter := initAccountFilter(conf, flags)
 	// Generate a new OneLogin API token
-	apiToken := masl.GenerateToken(conf, logger)
+	apiToken := masl.GenerateToken(conf)
 
 	// OneLogin SAML assertion API call
-	samlAssertionData, err := masl.SAMLAssertion(conf, logger, password, apiToken)
+	samlAssertionData, err := masl.SAMLAssertion(conf, password, apiToken)
 	if err != nil {
 		fmt.Printf("\n%s\n", err)
-		logger.Fatal(err)
+		logger.Fatal(err.Error())
 	}
 
 	reader := bufio.NewReader(os.Stdin)
 	samlData := readSamlData(samlAssertionData, conf, reader, apiToken)
 
 	// Print all SAMLAssertion Roles
-	roles := masl.ParseSAMLAssertion(samlData, conf.Accounts, logger, accountFilter, flags.Role)
+	roles := masl.ParseSAMLAssertion(samlData, conf.Accounts, accountFilter, flags.Role)
 	if len(roles) == 0 {
 		fmt.Println("No  masl for you! You don't have permissions to any account!")
 		os.Exit(0)
 	}
 	role := selectRole(roles)
 	awsAuthenticate(samlData, conf, role, usr.HomeDir, flags)
-}
-
-func loadConfig(logger *logrus.Logger) masl.Config {
-	conf := masl.GetConfig(logger)
-	if conf.Debug {
-		logger.SetLevel(logrus.DebugLevel)
-	}
-	return conf
-}
-
-func parseCliFlags(conf masl.Config) Flags {
-	flags := parseFlags(conf)
-	logger.WithFields(logrus.Fields{
-		"flags": flags,
-	}).Info("Parsed the commandline flags")
-	return flags
-}
-
-func initializeLogger(usr *user.User) (*logrus.Logger, *os.File) {
-	// Create the logger file if doesn't exist. Append to it if it already exists.
-	var filename = "masl.log"
-	file, err := os.OpenFile(usr.HomeDir+string(os.PathSeparator)+".masl"+string(os.PathSeparator)+filename,
-		os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
-	Formatter := new(logrus.TextFormatter)
-	Formatter.TimestampFormat = "02-01-2006 15:04:05"
-	Formatter.FullTimestamp = true
-	logger.Formatter = Formatter
-	if err == nil {
-		logger.Out = file
-	} else {
-		logger.Info("Failed to log to file, using default stderr")
-	}
-
-	logger.Info("------------------ w00t w00t masl for you!?  ------------------")
-	logger.SetLevel(logrus.InfoLevel)
-	return logger, file
 }
 
 func readSamlData(samlAssertionData masl.SAMLAssertionData, conf masl.Config, reader *bufio.Reader, apiToken string) string {
@@ -131,12 +99,12 @@ func readSamlData(samlAssertionData masl.SAMLAssertionData, conf masl.Config, re
 			}
 			otp, _ = reader.ReadString('\n')
 		}
-		samlData, err = masl.VerifyMFA(conf, logger, device.DeviceID, samlAssertionData.StateToken,
+		samlData, err = masl.VerifyMFA(conf, device.DeviceID, samlAssertionData.StateToken,
 			otp, apiToken)
 		// OneLogin Verify MFA API call
 		if err != nil {
 			fmt.Println(err)
-			logger.Fatal(err)
+			logger.Fatal(err.Error())
 		}
 	} else {
 		fmt.Println()
@@ -147,9 +115,9 @@ func readSamlData(samlAssertionData masl.SAMLAssertionData, conf masl.Config, re
 
 func awsAuthenticate(samlData string, conf masl.Config, role *masl.SAMLAssertionRole,
 	homeDir string, flags Flags) {
-	assertionOutput := masl.AssumeRole(samlData, int64(conf.Duration), role, logger)
-	masl.SetCredentials(assertionOutput, homeDir, flags.Profile, flags.LegacyToken, logger)    //profile
-	masl.SetCredentials(assertionOutput, homeDir, role.AccountName, flags.LegacyToken, logger) // account name
+	assertionOutput := masl.AssumeRole(samlData, int64(conf.Duration), role)
+	masl.SetCredentials(assertionOutput, homeDir, flags.Profile, flags.LegacyToken)    //profile
+	masl.SetCredentials(assertionOutput, homeDir, role.AccountName, flags.LegacyToken) // account name
 
 	logger.Info("w00t w00t masl for you!, Successfully authenticated.")
 
@@ -195,7 +163,7 @@ func parseFlags(conf masl.Config) Flags {
 	return *flags
 }
 
-func initAccountFilter(conf masl.Config, flags Flags, log *logrus.Logger) []string {
+func initAccountFilter(conf masl.Config, flags Flags) []string {
 
 	var accountFilter []string
 	if flags.Account != "" {
@@ -208,9 +176,7 @@ func initAccountFilter(conf masl.Config, flags Flags, log *logrus.Logger) []stri
 	} else if flags.Env != "" {
 		accountFilter = append(accountFilter, masl.GetAccountsForEnvironment(conf, flags.Env)...)
 	}
-	log.WithFields(logrus.Fields{
-		"accountFilter": accountFilter,
-	}).Info("Initialized the account filter")
+	logger.Info("Initialized the account filter")
 
 	return accountFilter
 }
@@ -233,7 +199,7 @@ func selectRole(roles []*masl.SAMLAssertionRole) *masl.SAMLAssertionRole {
 	index, err := strconv.Atoi(roleNumber)
 	if err != nil {
 		fmt.Println(err)
-		logger.Fatal(err)
+		logger.Fatal(err.Error())
 	}
 	return roles[index-1]
 }
@@ -265,7 +231,7 @@ func selectMFADevice(devices []masl.MFADevice, defaultMFADevice string) masl.MFA
 	index, err := strconv.Atoi(deviceNumber)
 	if err != nil {
 		fmt.Println(err)
-		logger.Fatal(err)
+		logger.Fatal(err.Error())
 	}
 	return devices[index-1]
 }

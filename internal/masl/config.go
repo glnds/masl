@@ -1,13 +1,11 @@
 package masl
 
 import (
-	"log"
 	"os"
 	"os/user"
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/sirupsen/logrus"
 )
 
 // Accounts represents the accounts section of the masl config file
@@ -38,35 +36,21 @@ type Config struct {
 	Accounts Accounts `toml:"Accounts"`
 }
 
+var logger = GetInstance()
+
 // GetConfig reads the .masl/config.toml configuration file for initialization.
-func GetConfig(logger *logrus.Logger) Config {
+func GetConfig() Config {
 
 	usr, err := user.Current()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err.Error())
 	}
 
 	// Read .masl/config.toml config file for initialization
 	conf := Config{Profile: "masl", LegacyToken: false, Debug: false, Duration: 3600} // Set default values
 	if _, err := toml.DecodeFile(usr.HomeDir+string(os.PathSeparator)+".masl"+string(os.PathSeparator)+"config.toml", &conf); err != nil {
-		log.Fatal(err.Error())
+		logger.Fatal(err.Error())
 	}
-
-	logger.WithFields(logrus.Fields{
-		"baseURL":       conf.BaseURL,
-		"clientID":      conf.ClientID,
-		"clientSecret":  conf.ClientSecret,
-		"appID":         conf.AppID,
-		"subdomain":     conf.Subdomain,
-		"username":      conf.Username,
-		"profile":       conf.Profile,
-		"defaultRole":   conf.DefaultRole,
-		"duration":      conf.Duration,
-		"legacyToken":   conf.LegacyToken,
-		"debug":         conf.Debug,
-		"#environments": len(conf.Environments),
-		"#accounts":     len(conf.Accounts),
-	}).Info("Config settings")
 
 	return conf
 }

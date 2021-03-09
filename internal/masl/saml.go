@@ -18,7 +18,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/ini.v1"
 )
 
@@ -142,38 +141,38 @@ func (byName RolesByName) Less(i, j int) bool {
 
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
-func logRequest(log *logrus.Logger, req *http.Request) {
+func logRequest(req *http.Request) {
 	// dump, _ := httputil.DumpRequest(req, true)
 	//TODO: shame on me, filter passwords from the requests before logging them!
 	// log.Debug(string(dump))
 }
 
-func logResponse(log *logrus.Logger, resp *http.Response) {
+func logResponse(resp *http.Response) {
 	dump, _ := httputil.DumpResponse(resp, true)
-	log.Debug(string(dump))
+	logger.Debug(string(dump))
 }
 
 // GenerateToken Call to https://developers.onelogin.com/api-docs/1/oauth20-tokens/generate-tokens
-func GenerateToken(conf Config, log *logrus.Logger) string {
+func GenerateToken(conf Config) string {
 
 	url := conf.BaseURL + generateTokenAPI
 	requestBody := []byte(`{"grant_type":"client_credentials"}`)
 	auth := "client_id:" + conf.ClientID + ",client_secret:" + conf.ClientSecret
 
 	apiToken := APITokenResponse{}
-	httpRequest(url, auth, requestBody, log, &apiToken)
+	httpRequest(url, auth, requestBody, &apiToken)
 
 	//TODO: being a bit optimistic here ;)
 	if apiToken.Status.Code != 200 {
 		fmt.Printf("Unable to acquire an OneLogin access token (check config.toml): %s\n", apiToken.Status.Message)
 		os.Exit(0)
 	}
-	log.Debug(apiToken)
+	// logger.Debug(apiToken)
 	return apiToken.Data[0].AccessToken
 }
 
 // SAMLAssertion Call to https://api.eu.onelogin.com/api/1/saml_assertion
-func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken string) (SAMLAssertionData, error) {
+func SAMLAssertion(conf Config, password string, apiToken string) (SAMLAssertionData, error) {
 
 	url := conf.BaseURL + samlAssertionAPI
 	requestBody, err := json.Marshal(SAMLAssertionRequest{
@@ -182,19 +181,19 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 		AppID:           conf.AppID,
 		Subdomain:       conf.Subdomain})
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatal(err.Error())
 	}
 	auth := "bearer:" + apiToken
 
 	// Parse the raw body to determine if MFA is required
-	body := httpRequestRaw(url, auth, requestBody, log)
+	body := httpRequestRaw(url, auth, requestBody)
 	var rawData map[string]interface{}
 	if err := json.Unmarshal(body, &rawData); err != nil {
-		log.Fatalln(err)
+		logger.Fatal(err.Error())
 	}
 	status := rawData["status"].(map[string]interface{})
 	message := status["message"].(string)
-	log.Info(message)
+	logger.Info(message)
 
 	var samlData SAMLAssertionData
 	var samlErr error
@@ -203,10 +202,10 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 	if code == 200 {
 		if strings.EqualFold(message, "success") {
 			// MFA NOT Required
-			log.Info("MFA not required")
+			logger.Info("MFA not required")
 			assertionResponse := samlAssertionResponse{}
 			if err := json.Unmarshal(body, &assertionResponse); err != nil {
-				log.Fatalln(err)
+				logger.Fatal(err.Error())
 			}
 
 			samlData = SAMLAssertionData{
@@ -214,14 +213,15 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 				Data:        assertionResponse.Data,
 			}
 		} else {
-			// MFA token is required
 			assertionResponse := samlAssertionResponseMFA{}
-			log.WithFields(logrus.Fields{
-				"response": assertionResponse,
-			}).Debug("Assertionresponse in case of  MFA")
+
+			// MFA token is required
+			// log.WithFields(logrus.Fields{
+			// 	"response": assertionResponse,
+			// }).Debug("Assertionresponse in case of  MFA")
 
 			if err := json.Unmarshal(body, &assertionResponse); err != nil {
-				log.Fatalln(err)
+				logger.Fatal(err.Error())
 			}
 
 			samlData = SAMLAssertionData{
@@ -237,7 +237,7 @@ func SAMLAssertion(conf Config, log *logrus.Logger, password string, apiToken st
 }
 
 // VerifyMFA Call to https://api.eu.onelogin.com/api/1/saml_assertion/verify_factor
-func VerifyMFA(conf Config, log *logrus.Logger, deviceID int, stateToken string, otp string,
+func VerifyMFA(conf Config, deviceID int, stateToken string, otp string,
 	apiToken string) (string, error) {
 
 	url := conf.BaseURL + verifyFactorAPI
@@ -247,12 +247,12 @@ func VerifyMFA(conf Config, log *logrus.Logger, deviceID int, stateToken string,
 		DeviceID:   strconv.Itoa(deviceID),
 		StateToken: stateToken})
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatal(err.Error())
 	}
 	auth := "bearer:" + apiToken
 
 	mfaResponse := VerifyMFAResponse{}
-	httpRequest(url, auth, requestBody, log, &mfaResponse)
+	httpRequest(url, auth, requestBody, &mfaResponse)
 
 	var samlData string
 	var samlErr error
@@ -267,14 +267,14 @@ func VerifyMFA(conf Config, log *logrus.Logger, deviceID int, stateToken string,
 }
 
 // ParseSAMLAssertion parse the SAMLAssertion response data into a list of SAMLAssertionRoles
-func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, log *logrus.Logger,
-	accountFilter []string, role string) []*SAMLAssertionRole {
+func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, accountFilter []string,
+	role string) []*SAMLAssertionRole {
 
 	sDec, _ := b64.StdEncoding.DecodeString(samlAssertion)
 
 	var samlResponse Response
 	if err := xml.Unmarshal(sDec, &samlResponse); err != nil {
-		log.Fatalln(err)
+		logger.Fatal(err.Error())
 	}
 
 	attributes := samlResponse.Assertion.AttributeStatement.Attributes
@@ -311,8 +311,7 @@ func ParseSAMLAssertion(samlAssertion string, accountInfo Accounts, log *logrus.
 }
 
 // AssumeRole assume a role on AWS
-func AssumeRole(samlAssertion string, duration int64, role *SAMLAssertionRole,
-	log *logrus.Logger) *sts.AssumeRoleWithSAMLOutput {
+func AssumeRole(samlAssertion string, duration int64, role *SAMLAssertionRole) *sts.AssumeRoleWithSAMLOutput {
 
 	session := session.Must(session.NewSession())
 	stsClient := sts.New(session)
@@ -326,14 +325,14 @@ func AssumeRole(samlAssertion string, duration int64, role *SAMLAssertionRole,
 	output, err := stsClient.AssumeRoleWithSAML(&input)
 	if err != nil {
 		fmt.Println(err.Error())
-		log.Fatal(err)
+		logger.Fatal(err.Error())
 	}
 	return output
 }
 
 // SetCredentials Apply the STS credentials on the host
 func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir string,
-	profileName string, legacyToken bool, log *logrus.Logger) {
+	profileName string, legacyToken bool) {
 
 	var cfg *ini.File
 	ini.PrettyFormat = false
@@ -344,50 +343,50 @@ func SetCredentials(assertionOutput *sts.AssumeRoleWithSAMLOutput, homeDir strin
 		filename = path + string(os.PathSeparator) + "credentials"
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			if err := os.Mkdir(path, 0755); err != nil {
-				log.Fatalln(err)
+				logger.Fatal(err.Error())
 			}
-			log.Info(".aws directory created.")
+			logger.Info(".aws directory created.")
 		}
 		if _, err := os.Stat(filename); os.IsNotExist(err) {
 			emptyFile, err := os.Create(filename)
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err.Error())
 			}
 			emptyFile.Close()
 			if err := os.Chmod(filename, 0600); err != nil {
-				log.Fatal(err)
+				logger.Fatal(err.Error())
 			}
-			log.Info("AWS credentials file created.")
+			logger.Info("AWS credentials file created.")
 		}
 	}
 
 	var err error
 	cfg, err = ini.Load(filename)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err.Error())
 	}
-	log.Info("AWS credentials file loaded.")
+	logger.Info("AWS credentials file loaded.")
 
 	sec := cfg.Section(profileName)
 	if _, err := sec.NewKey("aws_access_key_id", *assertionOutput.Credentials.AccessKeyId); err != nil {
-		log.Fatalln(err)
+		logger.Fatal(err.Error())
 	}
 	if _, err := sec.NewKey("aws_secret_access_key", *assertionOutput.Credentials.SecretAccessKey); err != nil {
-		log.Fatalln(err)
+		logger.Fatal(err.Error())
 	}
 	if _, err := sec.NewKey("aws_session_token", *assertionOutput.Credentials.SessionToken); err != nil {
-		log.Fatalln(err)
+		logger.Fatal(err.Error())
 	}
 	if legacyToken {
 		if _, err := sec.NewKey("aws_security_token", *assertionOutput.Credentials.SessionToken); err != nil {
-			log.Fatalln(err)
+			logger.Fatal(err.Error())
 		}
 	} else {
 		sec.DeleteKey("aws_security_token")
 	}
 	err = cfg.SaveTo(filename)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err.Error())
 	}
 }
 
@@ -401,7 +400,7 @@ func Contains(anArray []string, aString string) bool {
 	return false
 }
 
-func httpRequest(url string, auth string, jsonStr []byte, log *logrus.Logger, target interface{}) {
+func httpRequest(url string, auth string, jsonStr []byte, target interface{}) {
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 	if err != nil {
@@ -409,22 +408,22 @@ func httpRequest(url string, auth string, jsonStr []byte, log *logrus.Logger, ta
 	}
 	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
-	logRequest(log, req)
+	logRequest(req)
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err.Error())
 	}
 	defer resp.Body.Close()
 
-	logResponse(log, resp)
+	logResponse(resp)
 
 	if err := json.NewDecoder(resp.Body).Decode(target); err != nil {
-		log.Fatalln(err)
+		logger.Fatal(err.Error())
 	}
 }
 
-func httpRequestRaw(url string, auth string, jsonStr []byte, log *logrus.Logger) []byte {
+func httpRequestRaw(url string, auth string, jsonStr []byte) []byte {
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 	if err != nil {
@@ -432,19 +431,19 @@ func httpRequestRaw(url string, auth string, jsonStr []byte, log *logrus.Logger)
 	}
 	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
-	logRequest(log, req)
+	logRequest(req)
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err.Error())
 	}
 	defer resp.Body.Close()
 
-	logResponse(log, resp)
+	logResponse(resp)
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err.Error())
 	}
 	return body
 }
