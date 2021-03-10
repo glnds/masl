@@ -36,6 +36,7 @@ type Config struct {
 	Accounts Accounts `toml:"Accounts"`
 }
 
+// TODO: best way to make this global? Make the level dynamic here as well.
 var logger = GetLogger("info")
 
 // GetConfig reads the .masl/config.toml configuration file for initialization.
