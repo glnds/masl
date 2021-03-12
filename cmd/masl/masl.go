@@ -39,7 +39,7 @@ func main() {
 		logger = masl.GetLogger("info")
 	}
 
-	l ogger.Info("------------------ w00t w00t masl for you!?  ------------------")
+	logger.Info("------------------ w00t w00t masl for you!?  ------------------")
 
 	flags := parseFlags(conf)
 	logger.Info("Parsed the commandline flags")
