@@ -1,0 +1,16 @@
+name: CICD
+
+on: push
+
+jobs:
+  # The Build workflow
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Lint code
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
